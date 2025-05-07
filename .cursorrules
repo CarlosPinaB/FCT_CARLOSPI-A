@@ -1,0 +1,71 @@
+# Reglas de Proyecto para Actividades Extraescolares
+
+## Patrones de Desarrollo
+
+### Backend (Laravel)
+
+- Toda nueva funcionalidad debe comenzar con tests (TDD)
+- Usar repository pattern para acceso a datos
+- Los controladores deben ser ligeros (lógica en services)
+- Las políticas de autorización deben estar separadas por modelo
+- Códigos de estado HTTP correctos en respuestas API
+
+### Frontend (Angular)
+
+- Lazy loading para todos los módulos principales
+- Componentes reutilizables en carpeta shared
+- Servicios para comunicación con API
+- Reactive Forms para todos los formularios
+- Tests para cada componente nuevo
+
+## Estructura de Commits
+
+- Usar formato: `[Área]: Descripción concisa`
+- Áreas válidas: `[Backend]`, `[Frontend]`, `[Tests]`, `[DB]`, `[Docs]`
+- Ejemplo: `[Backend]: Implementar autenticación de usuarios`
+
+## Estándares de Código
+
+- Laravel: Seguir PSR-12
+- Angular: Seguir Angular Style Guide
+- Nombrar variables y funciones en inglés
+- Documentar métodos públicos
+
+## Flujo de Trabajo
+
+- Cada funcionalidad requiere tests antes de implementación
+- Commits pequeños y frecuentes
+- Actualizar documentación al completar cada funcionalidad
+
+## Preferencias de Usuario
+
+- Prefer: Desarrollo secuencial Backend → Frontend
+- Prefer: Laravel Sanctum para autenticación
+- Prefer: Sistema simple de categorías
+- Prefer: Estructura clara de roles (alumno/profesor)
+
+## Validaciones Importantes
+
+- Autenticación requerida para la mayoría de endpoints
+- Verificar autorización: profesores solo editan sus actividades
+- Validación de formularios tanto en backend como frontend
+- Controlar errores y mostrar mensajes adecuados al usuario
+
+## Conocimientos Específicos
+
+- Modelo User: campo 'role' para distinguir profesores/alumnos
+- Modelo Activity: pertenece a un usuario (profesor) y una categoría
+- Modelo Enrollment: relación many-to-many entre User y Activity
+
+## Implementaciones Críticas
+
+- Sistema de autorización basado en roles
+- Protección de rutas según rol
+- Gestión de errores consistente en API
+- Comunicación frontend-backend vía HTTP interceptors
+
+## Evolución del Proyecto
+
+- Inicialmente enfoque en funcionalidad básica
+- Expansión posterior posible para características adicionales
+- Enfoque en calidad y mantenibilidad desde el inicio
