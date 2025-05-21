@@ -13,7 +13,13 @@ return new class extends Migration
     {
         Schema::create('enrollments', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('activity_id')->constrained()->onDelete('cascade');
+            $table->foreignId('user_id')->constrained()->onDelete('cascade');
+            $table->enum('status', ['pending', 'approved', 'rejected', 'cancelled'])->default('pending');
             $table->timestamps();
+
+            // Asegurar que un usuario no puede inscribirse dos veces en la misma actividad
+            $table->unique(['activity_id', 'user_id']);
         });
     }
 
