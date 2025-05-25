@@ -4,6 +4,9 @@ namespace App\Http\Controllers;
 
 use App\Models\Category;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\Rule;
+use Illuminate\Support\Facades\Auth;
 
 class CategoryController extends Controller
 {
@@ -12,7 +15,11 @@ class CategoryController extends Controller
      */
     public function index()
     {
-        //
+        $categories = Category::all();
+
+        return response()->json([
+            'data' => $categories
+        ], 200);
     }
 
     /**
@@ -20,7 +27,7 @@ class CategoryController extends Controller
      */
     public function create()
     {
-        //
+        // No necesario para API
     }
 
     /**
@@ -28,7 +35,36 @@ class CategoryController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        // Verificar que el usuario esté autenticado
+        if (!Auth::check()) {
+            return response()->json(['message' => 'Unauthorized'], 401);
+        }
+
+        // Verificar que el usuario sea profesor
+        if (Auth::user()->role !== 'profesor') {
+            return response()->json(['message' => 'Forbidden'], 403);
+        }
+
+        // Validar datos
+        $validator = Validator::make($request->all(), [
+            'name' => 'required|string|max:255|unique:categories',
+            'description' => 'nullable|string'
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'message' => 'The given data was invalid.',
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        // Crear categoría
+        $category = Category::create([
+            'name' => $request->name,
+            'description' => $request->description
+        ]);
+
+        return response()->json($category, 201);
     }
 
     /**
@@ -36,7 +72,7 @@ class CategoryController extends Controller
      */
     public function show(Category $category)
     {
-        //
+        return response()->json($category, 200);
     }
 
     /**
@@ -44,7 +80,7 @@ class CategoryController extends Controller
      */
     public function edit(Category $category)
     {
-        //
+        // No necesario para API
     }
 
     /**
@@ -52,7 +88,36 @@ class CategoryController extends Controller
      */
     public function update(Request $request, Category $category)
     {
-        //
+        // Verificar que el usuario esté autenticado
+        if (!Auth::check()) {
+            return response()->json(['message' => 'Unauthorized'], 401);
+        }
+
+        // Verificar que el usuario sea profesor
+        if (Auth::user()->role !== 'profesor') {
+            return response()->json(['message' => 'Forbidden'], 403);
+        }
+
+        // Validar datos
+        $validator = Validator::make($request->all(), [
+            'name' => ['required', 'string', 'max:255', Rule::unique('categories')->ignore($category->id)],
+            'description' => 'nullable|string'
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'message' => 'The given data was invalid.',
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        // Actualizar categoría
+        $category->update([
+            'name' => $request->name,
+            'description' => $request->description
+        ]);
+
+        return response()->json($category, 200);
     }
 
     /**
@@ -60,6 +125,19 @@ class CategoryController extends Controller
      */
     public function destroy(Category $category)
     {
-        //
+        // Verificar que el usuario esté autenticado
+        if (!Auth::check()) {
+            return response()->json(['message' => 'Unauthorized'], 401);
+        }
+
+        // Verificar que el usuario sea profesor
+        if (Auth::user()->role !== 'profesor') {
+            return response()->json(['message' => 'Forbidden'], 403);
+        }
+
+        // Eliminar categoría
+        $category->delete();
+
+        return response()->json(['message' => 'Category deleted successfully'], 200);
     }
 }
