@@ -20,6 +20,8 @@ return new class extends Migration
             $table->integer('max_participants')->nullable();
             $table->dateTime('start_date');
             $table->dateTime('end_date');
+            $table->string('location')->nullable();
+            $table->boolean('is_active')->default(true);
             $table->timestamps();
         });
     }

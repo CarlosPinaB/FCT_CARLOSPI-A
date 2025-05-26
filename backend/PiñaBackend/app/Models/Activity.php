@@ -16,6 +16,8 @@ class Activity extends Model
         'start_date',
         'end_date',
         'max_participants',
+        'location',
+        'is_active',
         'category_id',
         'user_id'
     ];
