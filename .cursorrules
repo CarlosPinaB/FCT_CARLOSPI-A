@@ -5,10 +5,11 @@
 ### Backend (Laravel)
 
 - Toda nueva funcionalidad debe comenzar con tests (TDD)
-- Usar repository pattern para acceso a datos
-- Los controladores deben ser ligeros (lógica en services)
-- Las políticas de autorización deben estar separadas por modelo
+- Request classes para validaciones complejas (8+ reglas)
+- Autorización por propiedad: verificar ownership en controladores
+- Endpoints mixtos: públicos para lectura, protegidos para escritura
 - Códigos de estado HTTP correctos en respuestas API
+- Mensajes de error en español para mejor UX
 
 ### Frontend (Angular)
 
@@ -46,22 +47,27 @@
 
 ## Validaciones Importantes
 
-- Autenticación requerida para la mayoría de endpoints
+- Autenticación requerida para endpoints de escritura
 - Verificar autorización: profesores solo editan sus actividades
 - Validación de formularios tanto en backend como frontend
 - Controlar errores y mostrar mensajes adecuados al usuario
+- Validaciones de fechas coherentes (end_date >= start_date >= today)
 
 ## Conocimientos Específicos
 
 - Modelo User: campo 'role' para distinguir profesores/alumnos
 - Modelo Activity: pertenece a un usuario (profesor) y una categoría
 - Modelo Enrollment: relación many-to-many entre User y Activity
+- Campo 'price' eliminado del sistema por decisión del usuario
+- Endpoint especial /my-activities para profesores ver sus actividades
 
 ## Implementaciones Críticas
 
-- Sistema de autorización basado en roles
-- Protección de rutas según rol
+- Sistema de autorización basado en roles Y propiedad
+- Protección de rutas según rol y ownership
 - Gestión de errores consistente en API
+- Request classes para validaciones complejas (Activities)
+- Endpoints públicos para lectura, protegidos para escritura
 - Comunicación frontend-backend vía HTTP interceptors
 
 ## Evolución del Proyecto

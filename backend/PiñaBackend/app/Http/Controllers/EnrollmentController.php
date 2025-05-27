@@ -2,64 +2,195 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Activity;
 use App\Models\Enrollment;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class EnrollmentController extends Controller
 {
     /**
-     * Display a listing of the resource.
+     * Create a new controller instance.
      */
-    public function index()
+    public function __construct()
     {
-        //
+        $this->middleware('auth:sanctum');
     }
 
     /**
-     * Show the form for creating a new resource.
+     * Enroll a student in an activity.
      */
-    public function create()
+    public function enroll(Request $request, Activity $activity): JsonResponse
     {
-        //
+        $user = $request->user();
+
+        // Solo los alumnos pueden inscribirse
+        if ($user->role !== 'alumno') {
+            return response()->json([
+                'message' => 'Solo los alumnos pueden inscribirse en actividades.'
+            ], 403);
+        }
+
+        // Verificar si ya está inscrito
+        $existingEnrollment = Enrollment::where('activity_id', $activity->id)
+            ->where('user_id', $user->id)
+            ->first();
+
+        if ($existingEnrollment) {
+            return response()->json([
+                'message' => 'Ya estás inscrito en esta actividad.'
+            ], 409);
+        }
+
+        // Verificar si la actividad está llena
+        $approvedEnrollments = Enrollment::where('activity_id', $activity->id)
+            ->where('status', 'approved')
+            ->count();
+
+        if ($activity->max_participants && $approvedEnrollments >= $activity->max_participants) {
+            return response()->json([
+                'message' => 'La actividad está llena.'
+            ], 409);
+        }
+
+        // Crear la inscripción
+        $enrollment = Enrollment::create([
+            'activity_id' => $activity->id,
+            'user_id' => $user->id,
+            'status' => 'pending'
+        ]);
+
+        return response()->json([
+            'data' => $enrollment
+        ], 201);
     }
 
     /**
-     * Store a newly created resource in storage.
+     * Cancel an enrollment.
      */
-    public function store(Request $request)
+    public function cancel(Request $request, Enrollment $enrollment): JsonResponse
     {
-        //
+        $user = $request->user();
+
+        // Solo el estudiante propietario puede cancelar su inscripción
+        if ($enrollment->user_id !== $user->id) {
+            return response()->json([
+                'message' => 'No tienes permisos para cancelar esta inscripción.'
+            ], 403);
+        }
+
+        // Actualizar el estado a cancelado
+        $enrollment->update(['status' => 'cancelled']);
+
+        return response()->json([
+            'message' => 'Inscripción cancelada exitosamente.'
+        ]);
     }
 
     /**
-     * Display the specified resource.
+     * Get enrollments for the authenticated student.
      */
-    public function show(Enrollment $enrollment)
+    public function myEnrollments(Request $request): JsonResponse
     {
-        //
+        $user = $request->user();
+
+        $enrollments = Enrollment::with(['activity' => function ($query) {
+            $query->select('id', 'name', 'description', 'start_date', 'end_date', 'location');
+        }])
+            ->where('user_id', $user->id)
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        return response()->json([
+            'data' => $enrollments
+        ]);
     }
 
     /**
-     * Show the form for editing the specified resource.
+     * Get enrollments for a specific activity (teacher only).
      */
-    public function edit(Enrollment $enrollment)
+    public function activityEnrollments(Request $request, Activity $activity): JsonResponse
     {
-        //
+        $user = $request->user();
+
+        // Solo el profesor propietario puede ver las inscripciones
+        if ($user->role !== 'profesor' || $activity->user_id !== $user->id) {
+            return response()->json([
+                'message' => 'No tienes permisos para ver las inscripciones de esta actividad.'
+            ], 403);
+        }
+
+        $enrollments = Enrollment::with(['student' => function ($query) {
+            $query->select('id', 'name', 'email');
+        }])
+            ->where('activity_id', $activity->id)
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        return response()->json([
+            'data' => $enrollments
+        ]);
     }
 
     /**
-     * Update the specified resource in storage.
+     * Approve an enrollment (teacher only).
      */
-    public function update(Request $request, Enrollment $enrollment)
+    public function approve(Request $request, Enrollment $enrollment): JsonResponse
     {
-        //
+        $user = $request->user();
+
+        // Cargar la actividad relacionada
+        $enrollment->load('activity');
+
+        // Solo el profesor propietario puede aprobar inscripciones
+        if ($user->role !== 'profesor' || $enrollment->activity->user_id !== $user->id) {
+            return response()->json([
+                'message' => 'No tienes permisos para gestionar esta inscripción.'
+            ], 403);
+        }
+
+        // Verificar si la actividad está llena antes de aprobar
+        $approvedEnrollments = Enrollment::where('activity_id', $enrollment->activity_id)
+            ->where('status', 'approved')
+            ->count();
+
+        if ($enrollment->activity->max_participants && $approvedEnrollments >= $enrollment->activity->max_participants) {
+            return response()->json([
+                'message' => 'No se puede aprobar: la actividad está llena.'
+            ], 409);
+        }
+
+        // Aprobar la inscripción
+        $enrollment->update(['status' => 'approved']);
+
+        return response()->json([
+            'message' => 'Inscripción aprobada exitosamente.'
+        ]);
     }
 
     /**
-     * Remove the specified resource from storage.
+     * Reject an enrollment (teacher only).
      */
-    public function destroy(Enrollment $enrollment)
+    public function reject(Request $request, Enrollment $enrollment): JsonResponse
     {
-        //
+        $user = $request->user();
+
+        // Cargar la actividad relacionada
+        $enrollment->load('activity');
+
+        // Solo el profesor propietario puede rechazar inscripciones
+        if ($user->role !== 'profesor' || $enrollment->activity->user_id !== $user->id) {
+            return response()->json([
+                'message' => 'No tienes permisos para gestionar esta inscripción.'
+            ], 403);
+        }
+
+        // Rechazar la inscripción
+        $enrollment->update(['status' => 'rejected']);
+
+        return response()->json([
+            'message' => 'Inscripción rechazada exitosamente.'
+        ]);
     }
 }

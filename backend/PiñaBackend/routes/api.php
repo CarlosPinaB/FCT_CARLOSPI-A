@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\ActivityController;
+use App\Http\Controllers\EnrollmentController;
 
 // Ruta de prueba
 Route::get('/test', function () {
@@ -42,4 +43,12 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Ruta especial para obtener las actividades del profesor autenticado
     Route::get('/my-activities', [ActivityController::class, 'myActivities']);
+
+    // Rutas de inscripciones (enrollments)
+    Route::post('/activities/{activity}/enroll', [EnrollmentController::class, 'enroll']);
+    Route::delete('/enrollments/{enrollment}', [EnrollmentController::class, 'cancel']);
+    Route::get('/my-enrollments', [EnrollmentController::class, 'myEnrollments']);
+    Route::get('/activities/{activity}/enrollments', [EnrollmentController::class, 'activityEnrollments']);
+    Route::patch('/enrollments/{enrollment}/approve', [EnrollmentController::class, 'approve']);
+    Route::patch('/enrollments/{enrollment}/reject', [EnrollmentController::class, 'reject']);
 });
