@@ -1,0 +1,219 @@
+º<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Sistema de Actividades Extraescolares</title>
+
+    <!-- Bootstrap 5 CSS -->
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+
+    <!-- Font Awesome -->
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
+    />
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="assets/css/main.css" />
+    <link rel="stylesheet" href="assets/css/components.css" />
+    <link rel="stylesheet" href="assets/css/forms.css" />
+    <link rel="stylesheet" href="assets/css/responsive.css" />
+
+    <!-- Meta tags para SEO -->
+    <meta
+      name="description"
+      content="Sistema de gestión de actividades extraescolares para profesores y alumnos"
+    />
+    <meta
+      name="keywords"
+      content="actividades, extraescolares, educación, gestión"
+    />
+    <meta name="author" content="Sistema de Actividades Extraescolares" />
+
+    <!-- Favicon (placeholder) -->
+    <link rel="icon" type="image/x-icon" href="assets/images/favicon.ico" />
+  </head>
+  <body>
+    <!-- Navbar Principal -->
+    <nav
+      id="navbar"
+      class="navbar navbar-expand-lg navbar-dark bg-primary fixed-top"
+    >
+      <div class="container">
+        <a class="navbar-brand fw-bold" href="#" data-route="/">
+          <i class="fas fa-graduation-cap me-2"></i>
+          Actividades Extraescolares
+        </a>
+
+        <button
+          class="navbar-toggler"
+          type="button"
+          data-bs-toggle="collapse"
+          data-bs-target="#navbarNav"
+        >
+          <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div class="collapse navbar-collapse" id="navbarNav">
+          <!-- Menú Principal -->
+          <ul class="navbar-nav me-auto">
+            <li class="nav-item">
+              <a class="nav-link" href="#" data-route="/">
+                <i class="fas fa-home me-1"></i>Inicio
+              </a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="#" data-route="/activities">
+                <i class="fas fa-list me-1"></i>Actividades
+              </a>
+            </li>
+          </ul>
+
+          <!-- Menú Usuario (se mostrará dinámicamente) -->
+          <ul class="navbar-nav" id="user-menu">
+            <!-- Menú cuando NO está logueado -->
+            <li class="nav-item guest-only">
+              <a class="nav-link" href="#" data-route="/login">
+                <i class="fas fa-sign-in-alt me-1"></i>Iniciar Sesión
+              </a>
+            </li>
+            <li class="nav-item guest-only">
+              <a class="nav-link" href="#" data-route="/register">
+                <i class="fas fa-user-plus me-1"></i>Registrarse
+              </a>
+            </li>
+
+            <!-- Menú cuando SÍ está logueado -->
+            <li class="nav-item dropdown auth-only d-none">
+              <a
+                class="nav-link dropdown-toggle"
+                href="#"
+                id="navbarDropdown"
+                role="button"
+                data-bs-toggle="dropdown"
+              >
+                <i class="fas fa-user-circle me-1"></i>
+                <span id="user-name">Usuario</span>
+              </a>
+              <ul class="dropdown-menu">
+                <li>
+                  <a class="dropdown-item" href="#" data-route="/dashboard">
+                    <i class="fas fa-tachometer-alt me-2"></i>Dashboard
+                  </a>
+                </li>
+                <li>
+                  <a class="dropdown-item" href="#" data-route="/profile">
+                    <i class="fas fa-user-edit me-2"></i>Mi Perfil
+                  </a>
+                </li>
+                <li><hr class="dropdown-divider" /></li>
+
+                <!-- Menús específicos por rol -->
+                <li class="profesor-only">
+                  <a class="dropdown-item" href="#" data-route="/my-activities">
+                    <i class="fas fa-tasks me-2"></i>Mis Actividades
+                  </a>
+                </li>
+                <li class="profesor-only">
+                  <a
+                    class="dropdown-item"
+                    href="#"
+                    data-route="/activity/create"
+                  >
+                    <i class="fas fa-plus me-2"></i>Crear Actividad
+                  </a>
+                </li>
+                <li class="alumno-only">
+                  <a
+                    class="dropdown-item"
+                    href="#"
+                    data-route="/my-enrollments"
+                  >
+                    <i class="fas fa-bookmark me-2"></i>Mis Inscripciones
+                  </a>
+                </li>
+
+                <li><hr class="dropdown-divider" /></li>
+                <li>
+                  <a class="dropdown-item text-danger" href="#" id="logout-btn">
+                    <i class="fas fa-sign-out-alt me-2"></i>Cerrar Sesión
+                  </a>
+                </li>
+              </ul>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </nav>
+
+    <!-- Loading Overlay -->
+    <div id="loading-overlay" class="loading-overlay d-none">
+      <div class="loading-spinner">
+        <div class="spinner-border text-primary" role="status">
+          <span class="visually-hidden">Cargando...</span>
+        </div>
+        <div class="loading-text mt-3">Cargando...</div>
+      </div>
+    </div>
+
+    <!-- Alert Container -->
+    <div id="alert-container" class="alert-container"></div>
+
+    <!-- Main Content -->
+    <main id="main-content" class="main-content">
+      <!-- El contenido se renderizará dinámicamente aquí -->
+      <div class="container mt-5 pt-4">
+        <div class="text-center">
+          <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Cargando aplicación...</span>
+          </div>
+          <p class="mt-3">Inicializando aplicación...</p>
+        </div>
+      </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-dark text-light py-4 mt-5">
+      <div class="container">
+        <div class="row">
+          <div class="col-md-6">
+            <h5>
+              <i class="fas fa-graduation-cap me-2"></i>Actividades
+              Extraescolares
+            </h5>
+            <p class="mb-0">Sistema de gestión de actividades educativas</p>
+          </div>
+          <div class="col-md-6 text-md-end">
+            <p class="mb-0">
+              <small>&copy; 2025 Sistema de Actividades Extraescolares</small>
+            </p>
+            <p class="mb-0">
+              <small>Versión 1.0.0</small>
+            </p>
+          </div>
+        </div>
+      </div>
+    </footer>
+
+    <!-- Modal Container -->
+    <div id="modal-container"></div>
+
+    <!-- Bootstrap 5 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- App JS Modules -->
+    <script type="module" src="assets/js/app.js"></script>
+  </body>
+</html>

@@ -1,77 +1,202 @@
 # Reglas de Proyecto para Actividades Extraescolares
 
+## Estado Actual del Proyecto (Actualizado según Memory Bank)
+
+**Progreso Total: 85%**
+- ✅ **Backend Laravel: 100% Completado** (72 tests pasando)
+- ✅ **Frontend Estructura: 100% Completado** (JavaScript Vanilla)
+- ❌ **Frontend Funcionalidad: 20% Completado** (solo páginas básicas)
+
+### Cambio Estratégico Frontend: Angular → JavaScript Vanilla
+
+**✅ DECISIÓN TOMADA**: Frontend eliminado y reconstruido con JavaScript Vanilla
+- **Razón**: Simplicidad, control total, desarrollo más rápido
+- **Stack Final**: HTML5 + CSS3 + JavaScript ES6+ + Bootstrap 5
+- **Estado**: Estructura completa, falta implementar páginas funcionales
+
 ## Patrones de Desarrollo
 
-### Backend (Laravel)
+### Backend (Laravel) - ✅ COMPLETADO
 
-- Toda nueva funcionalidad debe comenzar con tests (TDD)
-- Request classes para validaciones complejas (8+ reglas)
-- Autorización por propiedad: verificar ownership en controladores
-- Endpoints mixtos: públicos para lectura, protegidos para escritura
-- Códigos de estado HTTP correctos en respuestas API
-- Mensajes de error en español para mejor UX
+- ✅ TDD implementado: 72 tests pasando (100% éxito)
+- ✅ Request classes para validaciones complejas (StoreActivityRequest, UpdateActivityRequest)
+- ✅ Autorización por propiedad: verificar ownership en controladores
+- ✅ Endpoints mixtos: públicos para lectura, protegidos para escritura
+- ✅ Laravel Sanctum funcionando completamente
+- ✅ Mensajes de error en español implementados
+- ✅ 20 endpoints API documentados y probados
 
-### Frontend (Angular)
+### Frontend (JavaScript Vanilla) - 🔄 EN DESARROLLO
 
-- Lazy loading para todos los módulos principales
-- Componentes reutilizables en carpeta shared
-- Servicios para comunicación con API
-- Reactive Forms para todos los formularios
-- Tests para cada componente nuevo
+**✅ Implementado:**
+- ✅ Estructura completa de carpetas según plan
+- ✅ HTML base con Bootstrap 5 + CDNs funcionando
+- ✅ Router SPA completo (414 líneas, 11 rutas configuradas)
+- ✅ Sistema de navegación responsive con roles
+- ✅ CSS completo (4 archivos, 2200+ líneas)
+- ✅ Componentes base: navbar.js, alert.js, loader.js
+- ✅ HTTP Client y Auth API implementados
+- ✅ LocalStorage helper funcional
 
-## Estructura de Commits
+**❌ Pendiente:**
+- Páginas funcionales: login.js, register.js, dashboard.js, activities.js
+- APIs de datos: activities-api.js, categories-api.js, enrollments-api.js
+- Testing manual de flujos completos
+
+## Metodología de Desarrollo Frontend
+
+### Testing After Development (TAD)
+```
+Desarrollar → Probar → Fix → Re-test → Commit → Siguiente funcionalidad
+```
+
+### Plan de 7 Días (Días 2-7 pendientes):
+- **Día 1**: ✅ Estructura base (COMPLETADO)
+- **Día 2**: ❌ Sistema autenticación (EN PROGRESO)
+- **Días 3-7**: Dashboard, actividades, inscripciones, pulido
+
+## Estructura de Commits Actualizada
 
 - Usar formato: `[Área]: Descripción concisa`
-- Áreas válidas: `[Backend]`, `[Frontend]`, `[Tests]`, `[DB]`, `[Docs]`
-- Ejemplo: `[Backend]: Implementar autenticación de usuarios`
+- Áreas válidas: `[Backend]`, `[Frontend]`, `[Tests]`, `[DB]`, `[Docs]`, `[Memory]`
+- Ejemplos recientes:
+  - `[Backend]: Sistema de activities completo con 12 tests`
+  - `[Frontend]: Estructura base y router SPA implementados`
 
-## Estándares de Código
+## Estado Backend Completado
 
-- Laravel: Seguir PSR-12
-- Angular: Seguir Angular Style Guide
-- Nombrar variables y funciones en inglés
-- Documentar métodos públicos
+### ✅ Sistemas Funcionales (100%):
 
-## Flujo de Trabajo
+1. **Authentication System**: 18 tests pasando
+   - Registro, login, logout con Laravel Sanctum
+   - Autorización por roles (alumno/profesor)
+   - Endpoint /api/auth/profile funcionando
 
-- Cada funcionalidad requiere tests antes de implementación
-- Commits pequeños y frecuentes
-- Actualizar documentación al completar cada funcionalidad
+2. **Categories System**: 12 tests pasando
+   - CRUD completo con autorización por roles
+   - 5 categorías predefinidas en seeders
+   - Endpoints públicos y protegidos
 
-## Preferencias de Usuario
+3. **Activities System**: 12 tests pasando
+   - CRUD completo con autorización por roles y propiedad
+   - Request classes implementadas (validaciones complejas)
+   - Endpoint especial /my-activities para profesores
+   - Campo price eliminado completamente
 
-- Prefer: Desarrollo secuencial Backend → Frontend
-- Prefer: Laravel Sanctum para autenticación
-- Prefer: Sistema simple de categorías
-- Prefer: Estructura clara de roles (alumno/profesor)
+4. **Enrollments System**: 17 tests pasando
+   - API completa de inscripciones
+   - Validaciones de límites y fechas
+   - Estados: active, cancelled
+   - Endpoints: enroll, unenroll, my-enrollments, participants
 
-## Validaciones Importantes
+### Colección Postman: 20 endpoints configurados y probados
 
-- Autenticación requerida para endpoints de escritura
-- Verificar autorización: profesores solo editan sus actividades
-- Validación de formularios tanto en backend como frontend
-- Controlar errores y mostrar mensajes adecuados al usuario
-- Validaciones de fechas coherentes (end_date >= start_date >= today)
+## Arquitectura Frontend Implementada
 
-## Conocimientos Específicos
+```
+frontend/
+├── index.html              # ✅ SPA principal con Bootstrap 5
+├── assets/
+│   ├── css/               # ✅ 4 archivos CSS completos
+│   │   ├── main.css       # ✅ Estilos principales + variables
+│   │   ├── components.css # ✅ Componentes reutilizables
+│   │   ├── forms.css      # ✅ Formularios y validaciones
+│   │   └── responsive.css # ✅ Media queries mobile-first
+│   ├── js/
+│   │   ├── app.js         # ✅ Inicialización (363 líneas)
+│   │   ├── router.js      # ✅ Router SPA (414 líneas)
+│   │   ├── api/
+│   │   │   ├── http-client.js # ✅ Cliente HTTP (273 líneas)
+│   │   │   ├── auth-api.js    # ✅ Auth API (350 líneas)
+│   │   │   ├── activities-api.js # ❌ PENDIENTE
+│   │   │   └── categories-api.js # ❌ PENDIENTE
+│   │   ├── components/
+│   │   │   ├── navbar.js     # ✅ Navegación con roles (177 líneas)
+│   │   │   ├── alert.js      # ✅ Sistema alertas (117 líneas)
+│   │   │   └── loader.js     # ✅ Indicadores carga (97 líneas)
+│   │   ├── pages/
+│   │   │   ├── home.js       # ✅ Página principal (257 líneas)
+│   │   │   ├── login.js      # ❌ PENDIENTE
+│   │   │   ├── register.js   # ❌ PENDIENTE
+│   │   │   ├── dashboard.js  # ❌ PENDIENTE
+│   │   │   └── activities.js # ❌ PENDIENTE
+│   │   └── utils/
+│   │       └── storage.js    # ✅ LocalStorage helper (330 líneas)
+```
 
-- Modelo User: campo 'role' para distinguir profesores/alumnos
-- Modelo Activity: pertenece a un usuario (profesor) y una categoría
-- Modelo Enrollment: relación many-to-many entre User y Activity
-- Campo 'price' eliminado del sistema por decisión del usuario
-- Endpoint especial /my-activities para profesores ver sus actividades
+## Rutas SPA Configuradas (11 rutas)
 
-## Implementaciones Críticas
+### ✅ Implementadas en router.js:
+- Públicas: /, /login, /register, /activities, /activity/:id
+- Protegidas: /dashboard, /profile
+- Solo profesores: /my-activities, /activity/create, /activity/edit/:id, /activity/:id/participants
+- Solo alumnos: /my-enrollments
+- Error: /404, /403
 
-- Sistema de autorización basado en roles Y propiedad
-- Protección de rutas según rol y ownership
-- Gestión de errores consistente en API
-- Request classes para validaciones complejas (Activities)
-- Endpoints públicos para lectura, protegidos para escritura
-- Comunicación frontend-backend vía HTTP interceptors
+## Conocimientos Específicos Actualizados
+
+### Modelos Backend (Funcionando):
+- **User**: Campo 'role' (alumno/profesor), Sanctum tokens
+- **Activity**: belongs to User y Category, sin campo 'price'
+- **Enrollment**: many-to-many User-Activity, estados active/cancelled
+- **Category**: 5 categorías predefinidas en seeders
+
+### APIs Backend (20 endpoints funcionando):
+- **Auth**: register, login, logout, profile
+- **Categories**: index, store, show, update, destroy  
+- **Activities**: index, store, show, update, destroy, my-activities
+- **Enrollments**: enroll, unenroll, my-enrollments, participants
+
+### Frontend SPA (Estructura lista):
+- **Router**: History API, rutas con parámetros, protección por roles
+- **HTTP Client**: Interceptors, manejo automático de tokens
+- **Auth Service**: Login, register, logout, verificación de roles
+- **Storage**: Tokens y datos de usuario en LocalStorage
+
+## Próximos Pasos Inmediatos
+
+### 🎯 Día 2: Sistema de Autenticación Frontend
+1. **Implementar**: login.js, register.js páginas funcionales
+2. **Crear**: activities-api.js, categories-api.js servicios
+3. **Testing**: Flujos de login/register manuales
+4. **Commit**: `[Frontend]: Sistema de autenticación completo y funcional`
+
+### 🎯 Días 3-7: Funcionalidades Core
+- Día 3: Dashboard diferenciado por roles + perfil
+- Día 4: Lista pública de actividades con filtros
+- Día 5: CRUD actividades para profesores
+- Día 6: Sistema inscripciones para alumnos
+- Día 7: Responsive, performance, testing exhaustivo
+
+## Criterios de "Done" por Funcionalidad
+
+- ✅ Funcionalidad implementada
+- ✅ Testing manual pasado (metodología TAD)
+- ✅ No errores en consola
+- ✅ Responsive verificado (mobile-first)
+- ✅ Integración backend funcionando
+- ✅ Commit realizado
+
+## Validaciones Importantes Implementadas
+
+- ✅ Autenticación requerida para endpoints de escritura
+- ✅ Verificar autorización: profesores solo editan sus actividades
+- ✅ Request classes con validaciones complejas
+- ✅ Mensajes de error en español
+- ✅ Validaciones de fechas coherentes (end_date >= start_date >= today)
+- ✅ Control de límites de participantes por actividad
+
+## Configuración de Desarrollo
+
+- **Backend**: `php artisan serve` puerto 8000
+- **Frontend**: HTTP Server puerto 3000 (Python o Live Server)
+- **Base de datos**: MySQL local con seeders poblados
+- **Testing**: `php artisan test` (72 tests pasando)
 
 ## Evolución del Proyecto
 
-- Inicialmente enfoque en funcionalidad básica
-- Expansión posterior posible para características adicionales
-- Enfoque en calidad y mantenibilidad desde el inicio
+- ✅ **Fase 1**: Backend completo con TDD (TERMINADO)
+- 🔄 **Fase 2**: Frontend JavaScript Vanilla (EN PROGRESO - 20%)
+- ⏳ **Fase 3**: Despliegue en Render (PENDIENTE)
+
+**🚀 Ready for:** Implementación páginas de autenticación frontend
