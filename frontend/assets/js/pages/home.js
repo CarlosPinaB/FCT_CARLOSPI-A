@@ -3,7 +3,8 @@
  */
 
 export default class HomePage {
-  constructor(app, params = {}) {
+  constructor(router, app, params = {}) {
+    this.router = router;
     this.app = app;
     this.params = params;
   }

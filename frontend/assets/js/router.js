@@ -209,8 +209,8 @@ class Router {
       const pageModule = await import(`./pages/${pageName}.js`);
       const PageClass = pageModule.default;
 
-      // Crear instancia de la página
-      const page = new PageClass(this.app, params);
+      // Crear instancia de la página con el orden correcto: (router, app)
+      const page = new PageClass(this, this.app, params);
 
       // Renderizar la página
       await this.renderPage(page);

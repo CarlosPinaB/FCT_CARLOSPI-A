@@ -30,18 +30,19 @@ export class AuthService {
         password: password,
       });
 
-      if (response.success) {
+      // El backend Laravel retorna { user, token } directamente en caso de éxito
+      if (response.user && response.token) {
         // Guardar token y datos del usuario
-        this.setToken(response.data.token);
-        this.setUser(response.data.user);
+        this.setToken(response.token);
+        this.setUser(response.user);
 
         // Configurar token en httpClient
-        this.httpClient.setAuthToken(response.data.token);
+        this.httpClient.setAuthToken(response.token);
 
         console.log("✅ AuthService: Login exitoso");
         return {
           success: true,
-          data: response.data,
+          data: response,
           message: "Login exitoso",
         };
       } else {
@@ -72,18 +73,19 @@ export class AuthService {
         role: userData.role,
       });
 
-      if (response.success) {
+      // El backend Laravel retorna { user, token } directamente en caso de éxito
+      if (response.user && response.token) {
         // Guardar token y datos del usuario
-        this.setToken(response.data.token);
-        this.setUser(response.data.user);
+        this.setToken(response.token);
+        this.setUser(response.user);
 
         // Configurar token en httpClient
-        this.httpClient.setAuthToken(response.data.token);
+        this.httpClient.setAuthToken(response.token);
 
         console.log("✅ AuthService: Registro exitoso");
         return {
           success: true,
-          data: response.data,
+          data: response,
           message: "Registro exitoso",
         };
       } else {
@@ -137,19 +139,21 @@ export class AuthService {
     try {
       console.log("👤 AuthService: Obteniendo perfil...");
 
-      const response = await this.httpClient.get("/me");
+      // El endpoint real es /user según las rutas de Laravel
+      const response = await this.httpClient.get("/user");
 
-      if (response.success) {
+      // Laravel retorna directamente el objeto User
+      if (response && response.id) {
         // Actualizar datos del usuario en storage
-        this.setUser(response.data.user);
+        this.setUser(response);
 
         console.log("✅ AuthService: Perfil obtenido");
         return {
           success: true,
-          data: response.data,
+          data: { user: response },
         };
       } else {
-        throw new Error(response.message || "Error obteniendo perfil");
+        throw new Error("Error obteniendo perfil");
       }
     } catch (error) {
       console.error("❌ AuthService: Error obteniendo perfil:", error);
@@ -168,66 +172,26 @@ export class AuthService {
 
   /**
    * Actualizar perfil del usuario
+   * TODO: Implementar endpoints en backend Laravel
    */
   async updateProfile(userData) {
-    try {
-      console.log("📝 AuthService: Actualizando perfil...");
-
-      const response = await this.httpClient.put("/me", userData);
-
-      if (response.success) {
-        // Actualizar datos del usuario en storage
-        this.setUser(response.data.user);
-
-        console.log("✅ AuthService: Perfil actualizado");
-        return {
-          success: true,
-          data: response.data,
-          message: "Perfil actualizado correctamente",
-        };
-      } else {
-        throw new Error(response.message || "Error actualizando perfil");
-      }
-    } catch (error) {
-      console.error("❌ AuthService: Error actualizando perfil:", error);
-      return {
-        success: false,
-        message: this.getErrorMessage(error),
-        errors: error.errors || null,
-      };
-    }
+    console.warn("⚠️ AuthService: updateProfile no implementado en backend");
+    return {
+      success: false,
+      message: "Funcionalidad no implementada",
+    };
   }
 
   /**
    * Cambiar contraseña
+   * TODO: Implementar endpoints en backend Laravel
    */
   async changePassword(currentPassword, newPassword, confirmPassword) {
-    try {
-      console.log("🔒 AuthService: Cambiando contraseña...");
-
-      const response = await this.httpClient.put("/change-password", {
-        current_password: currentPassword,
-        password: newPassword,
-        password_confirmation: confirmPassword,
-      });
-
-      if (response.success) {
-        console.log("✅ AuthService: Contraseña cambiada");
-        return {
-          success: true,
-          message: "Contraseña cambiada correctamente",
-        };
-      } else {
-        throw new Error(response.message || "Error cambiando contraseña");
-      }
-    } catch (error) {
-      console.error("❌ AuthService: Error cambiando contraseña:", error);
-      return {
-        success: false,
-        message: this.getErrorMessage(error),
-        errors: error.errors || null,
-      };
-    }
+    console.warn("⚠️ AuthService: changePassword no implementado en backend");
+    return {
+      success: false,
+      message: "Funcionalidad no implementada",
+    };
   }
 
   /**
