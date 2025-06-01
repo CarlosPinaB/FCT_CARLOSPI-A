@@ -13,6 +13,11 @@ export class NavbarManager {
    * Inicializar el navbar
    */
   init() {
+    if (!this.navbar) {
+      console.error("❌ NavbarManager: Elemento navbar no encontrado");
+      return;
+    }
+
     this.setupEventListeners();
     this.initialized = true;
     console.log("✅ NavbarManager: Navbar inicializado");
@@ -22,6 +27,13 @@ export class NavbarManager {
    * Configurar event listeners del navbar
    */
   setupEventListeners() {
+    if (!this.navbar) {
+      console.error(
+        "❌ NavbarManager: No se puede configurar listeners, navbar es null"
+      );
+      return;
+    }
+
     // Event listener para navegación
     this.navbar.addEventListener("click", (event) => {
       const routeLink = event.target.closest("[data-route]");

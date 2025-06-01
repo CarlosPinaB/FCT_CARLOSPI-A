@@ -2,7 +2,7 @@
  * Página de Inicio - Home
  */
 
-export default class HomePage {
+export class HomePage {
   constructor(router, app, params = {}) {
     this.router = router;
     this.app = app;
@@ -28,7 +28,7 @@ export default class HomePage {
               </p>
               <div class="hero-cta d-flex gap-3 flex-wrap">
                 ${
-                  this.app.isAuthenticated()
+                  this.app.auth.isAuthenticated()
                     ? `<a href="#" data-route="/dashboard" class="btn btn-primary btn-lg">
                     <i class="fas fa-tachometer-alt me-2"></i>
                     Mi Dashboard
@@ -184,7 +184,7 @@ export default class HomePage {
                 Únete a nuestra comunidad y descubre todas las oportunidades que tenemos para ti.
               </p>
               ${
-                !this.app.isAuthenticated()
+                !this.app.auth.isAuthenticated()
                   ? `<a href="#" data-route="/register" class="btn btn-primary btn-lg me-3">
                   <i class="fas fa-rocket me-2"></i>
                   Comenzar Ahora

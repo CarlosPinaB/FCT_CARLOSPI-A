@@ -7,8 +7,8 @@ import { HttpClient } from "./http-client.js";
 import { StorageManager } from "../utils/storage.js";
 
 export class AuthService {
-  constructor() {
-    this.httpClient = new HttpClient();
+  constructor(httpClient = null) {
+    this.httpClient = httpClient || new HttpClient();
     this.storageManager = new StorageManager();
 
     // Configurar token automáticamente si existe
@@ -172,26 +172,47 @@ export class AuthService {
 
   /**
    * Actualizar perfil del usuario
-   * TODO: Implementar endpoints en backend Laravel
    */
   async updateProfile(userData) {
-    console.warn("⚠️ AuthService: updateProfile no implementado en backend");
-    return {
-      success: false,
-      message: "Funcionalidad no implementada",
-    };
+    try {
+      console.log("👤 AuthService: Actualizando perfil...");
+
+      const response = await this.httpClient.put("/profile", userData);
+
+      if (response && response.user) {
+        // Actualizar datos del usuario en storage
+        this.setUser(response.user);
+
+        console.log("✅ AuthService: Perfil actualizado");
+        return response.user;
+      } else {
+        throw new Error("Error actualizando perfil");
+      }
+    } catch (error) {
+      console.error("❌ AuthService: Error actualizando perfil:", error);
+      throw error;
+    }
   }
 
   /**
    * Cambiar contraseña
-   * TODO: Implementar endpoints en backend Laravel
    */
-  async changePassword(currentPassword, newPassword, confirmPassword) {
-    console.warn("⚠️ AuthService: changePassword no implementado en backend");
-    return {
-      success: false,
-      message: "Funcionalidad no implementada",
-    };
+  async changePassword(passwordData) {
+    try {
+      console.log("🔐 AuthService: Cambiando contraseña...");
+
+      const response = await this.httpClient.put("/profile/password", {
+        current_password: passwordData.current_password,
+        new_password: passwordData.new_password,
+        confirm_password: passwordData.confirm_password,
+      });
+
+      console.log("✅ AuthService: Contraseña cambiada");
+      return response;
+    } catch (error) {
+      console.error("❌ AuthService: Error cambiando contraseña:", error);
+      throw error;
+    }
   }
 
   /**
@@ -309,5 +330,3 @@ export class AuthService {
     return token ? { Authorization: `Bearer ${token}` } : {};
   }
 }
-
-export default AuthService;

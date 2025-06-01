@@ -2,16 +2,11 @@
  * Página de Login - Simple y Funcional
  */
 
-import { AuthService } from "../api/auth-api.js";
-import { AlertManager } from "../components/alert.js";
-import { LoaderManager } from "../components/loader.js";
-
 export class LoginPage {
   constructor(router, app, params = {}) {
     this.router = router;
     this.app = app;
     this.params = params;
-    this.authService = new AuthService();
     console.log("🔐 LoginPage: Inicializada");
   }
 
@@ -111,7 +106,7 @@ export class LoginPage {
       const password = passwordInput.value.trim();
 
       if (!email || !password) {
-        AlertManager.error("Por favor completa todos los campos");
+        this.app.alert.error("Por favor completa todos los campos");
         return;
       }
 
@@ -119,34 +114,39 @@ export class LoginPage {
         loginBtn.disabled = true;
         loginBtn.innerHTML =
           '<span class="spinner-border spinner-border-sm me-2"></span>Iniciando...';
-        LoaderManager.show("Iniciando sesión...");
+        this.app.loader.show("Iniciando sesión...");
 
         console.log("🔐 Intentando login:", email);
-        const response = await this.authService.login(email, password);
+        const response = await this.app.authService.login(email, password);
 
         if (response.success) {
-          console.log("✅ Login exitoso:", response.data.user);
-          AlertManager.success(`¡Bienvenido/a, ${response.data.user.name}!`);
+          const user = response.data.user;
+          console.log("✅ Login exitoso:", user);
+          this.app.alert.success(`¡Bienvenido/a, ${user.name}!`);
 
-          // Notificar a la app (response.data ya contiene user y token)
-          this.app.handleLoginSuccess(response.data.user);
+          // Notificar a la app principal
+          if (window.app && window.app.handleLoginSuccess) {
+            window.app.handleLoginSuccess(user);
+          } else {
+            // Fallback: actualizar navbar manualmente
+            this.app.navbar?.updateAuthState?.(user);
+          }
 
           // Redirigir
           setTimeout(() => {
             this.router.navigate("/dashboard");
           }, 1500);
         } else {
-          console.warn("❌ Error de login:", response.message);
-          AlertManager.error(response.message || "Error de autenticación");
+          throw new Error(response.message || "Error de autenticación");
         }
       } catch (error) {
         console.error("❌ Error durante login:", error);
-        AlertManager.error("Error de conexión");
+        this.app.alert.error(error.message || "Error de autenticación");
       } finally {
         loginBtn.disabled = false;
         loginBtn.innerHTML =
           '<i class="fas fa-sign-in-alt me-2"></i>Iniciar Sesión';
-        LoaderManager.hide();
+        this.app.loader.hide();
       }
     });
 
@@ -155,21 +155,21 @@ export class LoginPage {
       console.log("🔐 Cargando credenciales de profesor");
       emailInput.value = "profesor@test.com";
       passwordInput.value = "password123";
-      AlertManager.info("Credenciales de profesor cargadas");
+      this.app.alert.info("Credenciales de profesor cargadas");
     });
 
     document.getElementById("demo-alumno")?.addEventListener("click", () => {
       console.log("🔐 Cargando credenciales de alumno");
       emailInput.value = "alumno@test.com";
       passwordInput.value = "password123";
-      AlertManager.info("Credenciales de alumno cargadas");
+      this.app.alert.info("Credenciales de alumno cargadas");
     });
 
     console.log("✅ LoginPage: Event listeners configurados");
   }
 
   cleanup() {
-    LoaderManager.hide();
+    this.app.loader.hide();
     console.log("🧹 LoginPage: Limpieza completada");
   }
 }

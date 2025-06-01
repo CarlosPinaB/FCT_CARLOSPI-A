@@ -1,358 +1,460 @@
 /**
- * API de Actividades - Sistema de Actividades Extraescolares
- * Maneja todas las operaciones CRUD de actividades
+ * Activities API - Sistema de Actividades Extraescolares
+ * Maneja todas las operaciones relacionadas con actividades
  */
 
-import { HttpClient } from "./http-client.js";
-
-export class ActivitiesAPI {
-  constructor() {
-    this.httpClient = new HttpClient();
-    this.baseUrl = "/activities";
-    console.log("📚 ActivitiesAPI: Inicializada");
+class ActivitiesAPI {
+  constructor(httpClient) {
+    this.http = httpClient;
+    this.basePath = "activities";
   }
 
   /**
-   * Obtener todas las actividades (público)
+   * Obtener todas las actividades públicas
    */
-  async getAll(filters = {}) {
+  async getPublicActivities(filters = {}) {
     try {
-      console.log("📚 ActivitiesAPI: Obteniendo todas las actividades");
+      console.log("🔍 ActivitiesAPI: Obteniendo actividades públicas...");
 
-      // Construir query string para filtros
       const queryParams = new URLSearchParams();
-      if (filters.category) queryParams.append("category", filters.category);
-      if (filters.search) queryParams.append("search", filters.search);
-      if (filters.page) queryParams.append("page", filters.page);
-      if (filters.limit) queryParams.append("limit", filters.limit);
 
-      const queryString = queryParams.toString();
-      const url = queryString ? `${this.baseUrl}?${queryString}` : this.baseUrl;
-
-      const response = await this.httpClient.get(url);
-
-      if (response.success) {
-        console.log(
-          `✅ ActivitiesAPI: ${
-            response.data.data?.length || 0
-          } actividades obtenidas`
-        );
-        return response;
-      } else {
-        console.warn(
-          "❌ ActivitiesAPI: Error obteniendo actividades:",
-          response.message
-        );
-        return response;
+      // Agregar filtros si existen
+      if (filters.category_id) {
+        queryParams.append("category_id", filters.category_id);
       }
+      if (filters.search) {
+        queryParams.append("search", filters.search);
+      }
+      if (filters.is_active !== undefined) {
+        queryParams.append("is_active", filters.is_active);
+      }
+
+      const url = queryParams.toString()
+        ? `${this.basePath}?${queryParams.toString()}`
+        : this.basePath;
+
+      const response = await this.http.get(url);
+
+      console.log(
+        `✅ ActivitiesAPI: ${response.data.length} actividades obtenidas`
+      );
+      return response.data;
     } catch (error) {
-      console.error("❌ ActivitiesAPI: Error en getAll:", error);
+      console.error(
+        "❌ ActivitiesAPI: Error obteniendo actividades públicas:",
+        error
+      );
       throw error;
     }
   }
 
   /**
-   * Obtener una actividad por ID (público)
-   */
-  async getById(id) {
-    try {
-      console.log(`📚 ActivitiesAPI: Obteniendo actividad ${id}`);
-
-      const response = await this.httpClient.get(`${this.baseUrl}/${id}`);
-
-      if (response.success) {
-        console.log(
-          "✅ ActivitiesAPI: Actividad obtenida:",
-          response.data.title
-        );
-        return response;
-      } else {
-        console.warn(
-          "❌ ActivitiesAPI: Error obteniendo actividad:",
-          response.message
-        );
-        return response;
-      }
-    } catch (error) {
-      console.error("❌ ActivitiesAPI: Error en getById:", error);
-      throw error;
-    }
-  }
-
-  /**
-   * Obtener actividades del profesor autenticado (protegido)
+   * Obtener actividades del profesor autenticado
    */
   async getMyActivities() {
     try {
-      console.log("📚 ActivitiesAPI: Obteniendo mis actividades");
+      console.log("📋 ActivitiesAPI: Obteniendo mis actividades...");
 
-      const response = await this.httpClient.get("/my-activities");
+      const response = await this.http.get("my-activities");
 
-      if (response.success) {
-        console.log(
-          `✅ ActivitiesAPI: ${response.data.length} actividades propias obtenidas`
-        );
-        return response;
-      } else {
-        console.warn(
-          "❌ ActivitiesAPI: Error obteniendo mis actividades:",
-          response.message
-        );
-        return response;
-      }
+      console.log(
+        `✅ ActivitiesAPI: ${response.data.length} actividades obtenidas`
+      );
+      return response.data;
     } catch (error) {
-      console.error("❌ ActivitiesAPI: Error en getMyActivities:", error);
+      console.error(
+        "❌ ActivitiesAPI: Error obteniendo mis actividades:",
+        error
+      );
       throw error;
     }
   }
 
   /**
-   * Crear nueva actividad (solo profesores)
+   * Obtener una actividad específica por ID
    */
-  async create(activityData) {
+  async getActivity(id) {
     try {
+      console.log(`🔍 ActivitiesAPI: Obteniendo actividad ${id}...`);
+
+      const response = await this.http.get(`${this.basePath}/${id}`);
+
       console.log(
-        "📚 ActivitiesAPI: Creando nueva actividad:",
-        activityData.title
+        `✅ ActivitiesAPI: Actividad "${response.data.title}" obtenida`
       );
-
-      const response = await this.httpClient.post(this.baseUrl, activityData);
-
-      if (response.success) {
-        console.log(
-          "✅ ActivitiesAPI: Actividad creada exitosamente:",
-          response.data.title
-        );
-        return response;
-      } else {
-        console.warn(
-          "❌ ActivitiesAPI: Error creando actividad:",
-          response.message
-        );
-        return response;
-      }
+      return response.data;
     } catch (error) {
-      console.error("❌ ActivitiesAPI: Error en create:", error);
+      console.error(
+        `❌ ActivitiesAPI: Error obteniendo actividad ${id}:`,
+        error
+      );
       throw error;
     }
   }
 
   /**
-   * Actualizar actividad existente (solo autor)
+   * Crear una nueva actividad
    */
-  async update(id, activityData) {
+  async createActivity(activityData) {
     try {
-      console.log(
-        `📚 ActivitiesAPI: Actualizando actividad ${id}:`,
-        activityData.title
-      );
+      console.log("➕ ActivitiesAPI: Creando nueva actividad...");
 
-      const response = await this.httpClient.put(
-        `${this.baseUrl}/${id}`,
+      // Validar datos requeridos
+      this.validateActivityData(activityData);
+
+      const response = await this.http.post(this.basePath, activityData);
+
+      console.log(
+        `✅ ActivitiesAPI: Actividad "${response.data.title}" creada exitosamente`
+      );
+      return response.data;
+    } catch (error) {
+      console.error("❌ ActivitiesAPI: Error creando actividad:", error);
+      throw error;
+    }
+  }
+
+  /**
+   * Actualizar una actividad existente
+   */
+  async updateActivity(id, activityData) {
+    try {
+      console.log(`✏️ ActivitiesAPI: Actualizando actividad ${id}...`);
+
+      // Validar datos requeridos
+      this.validateActivityData(activityData, false);
+
+      const response = await this.http.put(
+        `${this.basePath}/${id}`,
         activityData
       );
 
-      if (response.success) {
-        console.log("✅ ActivitiesAPI: Actividad actualizada exitosamente");
-        return response;
-      } else {
-        console.warn(
-          "❌ ActivitiesAPI: Error actualizando actividad:",
-          response.message
-        );
-        return response;
-      }
+      console.log(
+        `✅ ActivitiesAPI: Actividad "${response.data.title}" actualizada exitosamente`
+      );
+      return response.data;
     } catch (error) {
-      console.error("❌ ActivitiesAPI: Error en update:", error);
+      console.error(
+        `❌ ActivitiesAPI: Error actualizando actividad ${id}:`,
+        error
+      );
       throw error;
     }
   }
 
   /**
-   * Eliminar actividad (solo autor)
+   * Eliminar una actividad
    */
-  async delete(id) {
+  async deleteActivity(id) {
     try {
-      console.log(`📚 ActivitiesAPI: Eliminando actividad ${id}`);
+      console.log(`🗑️ ActivitiesAPI: Eliminando actividad ${id}...`);
 
-      const response = await this.httpClient.delete(`${this.baseUrl}/${id}`);
+      await this.http.delete(`${this.basePath}/${id}`);
 
-      if (response.success) {
-        console.log("✅ ActivitiesAPI: Actividad eliminada exitosamente");
-        return response;
-      } else {
-        console.warn(
-          "❌ ActivitiesAPI: Error eliminando actividad:",
-          response.message
-        );
-        return response;
-      }
+      console.log(`✅ ActivitiesAPI: Actividad ${id} eliminada exitosamente`);
+      return true;
     } catch (error) {
-      console.error("❌ ActivitiesAPI: Error en delete:", error);
+      console.error(
+        `❌ ActivitiesAPI: Error eliminando actividad ${id}:`,
+        error
+      );
       throw error;
     }
   }
 
   /**
-   * Obtener participantes de una actividad (solo autor)
+   * Obtener participantes de una actividad (solo profesores)
    */
-  async getParticipants(id) {
+  async getActivityParticipants(id) {
     try {
       console.log(
-        `📚 ActivitiesAPI: Obteniendo participantes de actividad ${id}`
+        `👥 ActivitiesAPI: Obteniendo participantes de actividad ${id}...`
       );
 
-      const response = await this.httpClient.get(
-        `${this.baseUrl}/${id}/participants`
+      const response = await this.http.get(
+        `${this.basePath}/${id}/participants`
       );
 
-      if (response.success) {
-        console.log(
-          `✅ ActivitiesAPI: ${response.data.length} participantes obtenidos`
-        );
-        return response;
-      } else {
-        console.warn(
-          "❌ ActivitiesAPI: Error obteniendo participantes:",
-          response.message
-        );
-        return response;
-      }
+      console.log(
+        `✅ ActivitiesAPI: ${response.data.length} participantes obtenidos`
+      );
+      return response.data;
     } catch (error) {
-      console.error("❌ ActivitiesAPI: Error en getParticipants:", error);
+      console.error(
+        `❌ ActivitiesAPI: Error obteniendo participantes de actividad ${id}:`,
+        error
+      );
       throw error;
     }
   }
 
   /**
-   * Validar datos de actividad antes de enviar
+   * Validar datos de actividad
    */
-  validateActivityData(data) {
+  validateActivityData(data, isCreate = true) {
     const errors = [];
 
-    // Validaciones básicas
-    if (!data.title || data.title.trim().length < 3) {
-      errors.push("El título debe tener al menos 3 caracteres");
+    // Validaciones requeridas para creación
+    if (isCreate) {
+      if (!data.title || data.title.trim().length === 0) {
+        errors.push("El título es requerido");
+      }
+      if (!data.description || data.description.trim().length === 0) {
+        errors.push("La descripción es requerida");
+      }
+      if (!data.category_id) {
+        errors.push("La categoría es requerida");
+      }
+      if (!data.start_date) {
+        errors.push("La fecha de inicio es requerida");
+      }
+      if (!data.end_date) {
+        errors.push("La fecha de fin es requerida");
+      }
     }
 
-    if (!data.description || data.description.trim().length < 10) {
-      errors.push("La descripción debe tener al menos 10 caracteres");
+    // Validaciones comunes
+    if (data.title && data.title.length > 255) {
+      errors.push("El título no puede exceder 255 caracteres");
     }
 
-    if (!data.category_id) {
-      errors.push("Debes seleccionar una categoría");
+    if (
+      data.capacity &&
+      (data.capacity < 1 || !Number.isInteger(data.capacity))
+    ) {
+      errors.push("La capacidad debe ser un número entero mayor a 0");
     }
 
-    if (!data.start_date) {
-      errors.push("La fecha de inicio es requerida");
-    }
-
-    if (!data.end_date) {
-      errors.push("La fecha de fin es requerida");
+    if (data.location && data.location.length > 255) {
+      errors.push("La ubicación no puede exceder 255 caracteres");
     }
 
     // Validación de fechas
     if (data.start_date && data.end_date) {
       const startDate = new Date(data.start_date);
       const endDate = new Date(data.end_date);
-      const now = new Date();
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
 
-      if (startDate < now) {
-        errors.push("La fecha de inicio debe ser futura");
+      if (startDate < today) {
+        errors.push("La fecha de inicio no puede ser anterior a hoy");
       }
 
-      if (endDate <= startDate) {
-        errors.push("La fecha de fin debe ser posterior a la de inicio");
+      if (endDate < startDate) {
+        errors.push(
+          "La fecha de fin no puede ser anterior a la fecha de inicio"
+        );
       }
     }
 
-    // Validación de participantes
-    if (data.max_participants && data.max_participants < 1) {
-      errors.push("El máximo de participantes debe ser al menos 1");
+    // Validación de horarios
+    if (data.start_time && data.end_time) {
+      const startTime = data.start_time.split(":");
+      const endTime = data.end_time.split(":");
+
+      const startMinutes = parseInt(startTime[0]) * 60 + parseInt(startTime[1]);
+      const endMinutes = parseInt(endTime[0]) * 60 + parseInt(endTime[1]);
+
+      if (endMinutes <= startMinutes) {
+        errors.push("La hora de fin debe ser posterior a la hora de inicio");
+      }
     }
 
-    if (data.max_participants && data.max_participants > 100) {
-      errors.push("El máximo de participantes no puede exceder 100");
+    if (errors.length > 0) {
+      throw new Error(errors.join(". "));
     }
-
-    return {
-      valid: errors.length === 0,
-      errors,
-    };
   }
 
   /**
-   * Formatear datos de actividad para envío
+   * Formatear datos de actividad para envío al backend
    */
   formatActivityData(formData) {
-    return {
+    const data = {
       title: formData.title?.trim(),
       description: formData.description?.trim(),
-      category_id: parseInt(formData.category_id),
-      start_date: formData.start_date,
-      end_date: formData.end_date,
-      max_participants: formData.max_participants
-        ? parseInt(formData.max_participants)
-        : null,
+      category_id: formData.category_id ? parseInt(formData.category_id) : null,
+      capacity: formData.capacity ? parseInt(formData.capacity) : null,
       location: formData.location?.trim() || null,
+      start_date: formData.start_date || null,
+      end_date: formData.end_date || null,
+      start_time: formData.start_time || null,
+      end_time: formData.end_time || null,
+      days_of_week: formData.days_of_week || null,
+      image_url: formData.image_url?.trim() || null,
+      is_active:
+        formData.is_active !== undefined ? Boolean(formData.is_active) : true,
     };
+
+    // Remover campos null/undefined para actualizaciones parciales
+    Object.keys(data).forEach((key) => {
+      if (data[key] === null || data[key] === undefined || data[key] === "") {
+        delete data[key];
+      }
+    });
+
+    return data;
   }
 
   /**
-   * Formatear actividad para mostrar
+   * Obtener actividades con filtros avanzados
    */
-  formatActivityForDisplay(activity) {
-    return {
-      ...activity,
-      start_date_formatted: this.formatDate(activity.start_date),
-      end_date_formatted: this.formatDate(activity.end_date),
-      duration: this.calculateDuration(activity.start_date, activity.end_date),
-      spots_remaining: activity.max_participants
-        ? activity.max_participants - (activity.enrollments_count || 0)
-        : null,
-      is_full: activity.max_participants
-        ? (activity.enrollments_count || 0) >= activity.max_participants
-        : false,
-      has_started: new Date(activity.start_date) <= new Date(),
-      has_ended: new Date(activity.end_date) <= new Date(),
-    };
+  async getActivitiesWithFilters(filters = {}) {
+    try {
+      const {
+        category_id,
+        search,
+        is_active,
+        start_date_from,
+        start_date_to,
+        has_capacity,
+        page = 1,
+        per_page = 12,
+      } = filters;
+
+      const queryParams = new URLSearchParams();
+
+      if (category_id) queryParams.append("category_id", category_id);
+      if (search) queryParams.append("search", search);
+      if (is_active !== undefined) queryParams.append("is_active", is_active);
+      if (start_date_from)
+        queryParams.append("start_date_from", start_date_from);
+      if (start_date_to) queryParams.append("start_date_to", start_date_to);
+      if (has_capacity !== undefined)
+        queryParams.append("has_capacity", has_capacity);
+      if (page) queryParams.append("page", page);
+      if (per_page) queryParams.append("per_page", per_page);
+
+      const url = `${this.basePath}?${queryParams.toString()}`;
+      const response = await this.http.get(url);
+
+      return {
+        data: response.data,
+        pagination: response.meta || {
+          current_page: page,
+          per_page: per_page,
+          total: response.data.length,
+        },
+      };
+    } catch (error) {
+      console.error(
+        "❌ ActivitiesAPI: Error obteniendo actividades con filtros:",
+        error
+      );
+      throw error;
+    }
   }
 
   /**
-   * Formatear fecha para mostrar
+   * Obtener estadísticas de actividades para el dashboard
    */
-  formatDate(dateString) {
-    const date = new Date(dateString);
-    return date.toLocaleDateString("es-ES", {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
+  async getActivityStats() {
+    try {
+      console.log("📊 ActivitiesAPI: Obteniendo estadísticas...");
+
+      // Para profesores, obtenemos sus actividades
+      const activities = await this.getMyActivities();
+
+      const stats = {
+        total: activities.length,
+        active: activities.filter((a) => a.is_active).length,
+        inactive: activities.filter((a) => !a.is_active).length,
+        this_month: activities.filter((a) => {
+          const activityDate = new Date(a.start_date);
+          const now = new Date();
+          return (
+            activityDate.getMonth() === now.getMonth() &&
+            activityDate.getFullYear() === now.getFullYear()
+          );
+        }).length,
+        total_participants: activities.reduce(
+          (sum, activity) => sum + (activity.enrolled_count || 0),
+          0
+        ),
+      };
+
+      console.log("✅ ActivitiesAPI: Estadísticas calculadas", stats);
+      return stats;
+    } catch (error) {
+      console.error("❌ ActivitiesAPI: Error obteniendo estadísticas:", error);
+      throw error;
+    }
+  }
+
+  /**
+   * Buscar actividades por texto
+   */
+  async searchActivities(query, filters = {}) {
+    return this.getActivitiesWithFilters({
+      ...filters,
+      search: query,
     });
   }
 
   /**
-   * Calcular duración entre fechas
+   * Obtener actividades por categoría
    */
-  calculateDuration(startDate, endDate) {
-    const start = new Date(startDate);
-    const end = new Date(endDate);
-    const diffMs = end - start;
-    const diffDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+  async getActivitiesByCategory(categoryId, filters = {}) {
+    return this.getActivitiesWithFilters({
+      ...filters,
+      category_id: categoryId,
+    });
+  }
 
-    if (diffDays === 1) {
-      return "1 día";
-    } else if (diffDays < 7) {
-      return `${diffDays} días`;
-    } else if (diffDays < 30) {
-      const weeks = Math.ceil(diffDays / 7);
-      return `${weeks} semana${weeks > 1 ? "s" : ""}`;
-    } else {
-      const months = Math.ceil(diffDays / 30);
-      return `${months} mes${months > 1 ? "es" : ""}`;
+  /**
+   * Verificar si el usuario puede editar una actividad
+   */
+  async canEditActivity(activityId) {
+    try {
+      const activity = await this.getActivity(activityId);
+      const user = window.app.auth.getCurrentUser();
+
+      return user && user.role === "profesor" && activity.user_id === user.id;
+    } catch (error) {
+      console.error("❌ ActivitiesAPI: Error verificando permisos:", error);
+      return false;
+    }
+  }
+
+  /**
+   * Obtener actividades populares (con más inscripciones)
+   */
+  async getPopularActivities(limit = 5) {
+    try {
+      const activities = await this.getPublicActivities({ is_active: true });
+
+      return activities
+        .sort((a, b) => (b.enrolled_count || 0) - (a.enrolled_count || 0))
+        .slice(0, limit);
+    } catch (error) {
+      console.error(
+        "❌ ActivitiesAPI: Error obteniendo actividades populares:",
+        error
+      );
+      throw error;
+    }
+  }
+
+  /**
+   * Obtener próximas actividades (por fecha de inicio)
+   */
+  async getUpcomingActivities(limit = 5) {
+    try {
+      const activities = await this.getPublicActivities({ is_active: true });
+      const now = new Date();
+
+      return activities
+        .filter((activity) => new Date(activity.start_date) >= now)
+        .sort((a, b) => new Date(a.start_date) - new Date(b.start_date))
+        .slice(0, limit);
+    } catch (error) {
+      console.error(
+        "❌ ActivitiesAPI: Error obteniendo próximas actividades:",
+        error
+      );
+      throw error;
     }
   }
 }
 
-export default ActivitiesAPI;
+// Exportar la clase usando ES6 modules
+export { ActivitiesAPI };

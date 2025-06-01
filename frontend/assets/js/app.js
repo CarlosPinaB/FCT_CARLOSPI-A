@@ -7,11 +7,15 @@
  */
 
 // Importaciones de módulos
-import Router from "./router.js";
+import { Router } from "./router.js";
 import { AuthService } from "./api/auth-api.js";
 import { AlertManager } from "./components/alert.js";
 import { LoaderManager } from "./components/loader.js";
 import { NavbarManager } from "./components/navbar.js";
+import { HttpClient } from "./api/http-client.js";
+import { ActivitiesAPI } from "./api/activities-api.js";
+import { CategoriesAPI } from "./api/categories-api.js";
+import { EnrollmentsAPI } from "./api/enrollments-api.js";
 
 /**
  * Clase principal de la aplicación
@@ -48,22 +52,34 @@ class App {
       console.log("📋 App: Iniciando configuración...");
 
       // 1. Configurar referencias DOM
+      console.log("🔧 App: Paso 1 - Configurando referencias DOM...");
       this.setupDOMReferences();
+      console.log("✅ App: Paso 1 completado");
 
       // 2. Inicializar servicios
+      console.log("🔧 App: Paso 2 - Inicializando servicios...");
       this.initializeServices();
+      console.log("✅ App: Paso 2 completado");
 
       // 3. Configurar event listeners globales
+      console.log("🔧 App: Paso 3 - Configurando event listeners...");
       this.setupGlobalEventListeners();
+      console.log("✅ App: Paso 3 completado");
 
-      // 4. Verificar autenticación
+      // 4. Verificar autenticación (no bloqueante)
+      console.log("🔧 App: Paso 4 - Verificando autenticación...");
       await this.checkAuthentication();
+      console.log("✅ App: Paso 4 completado");
 
       // 5. Inicializar router
+      console.log("🔧 App: Paso 5 - Inicializando router...");
       this.initializeRouter();
+      console.log("✅ App: Paso 5 completado");
 
       // 6. Configurar navbar
+      console.log("🔧 App: Paso 6 - Configurando navbar...");
       this.setupNavbar();
+      console.log("✅ App: Paso 6 completado");
 
       // 7. Marcar como inicializado
       this.isInitialized = true;
@@ -71,12 +87,20 @@ class App {
       console.log("✅ App: Aplicación inicializada correctamente");
 
       // Mostrar mensaje de bienvenida
-      AlertManager.success("¡Aplicación cargada correctamente!");
+      if (window.app && window.app.alert) {
+        window.app.alert.success("¡Aplicación cargada correctamente!");
+      }
     } catch (error) {
       console.error("❌ App: Error al inicializar aplicación:", error);
-      AlertManager.error(
-        "Error al cargar la aplicación. Por favor, recarga la página."
-      );
+      console.error("❌ App: Stack trace:", error.stack);
+
+      if (window.app && window.app.alert) {
+        window.app.alert.error(
+          "Error al cargar la aplicación. Por favor, recarga la página."
+        );
+      } else {
+        alert("Error al cargar la aplicación. Por favor, recarga la página.");
+      }
     }
   }
 
@@ -104,17 +128,56 @@ class App {
   }
 
   /**
-   * Inicializar servicios de la aplicación
+   * Inicializar servicios y APIs
    */
   initializeServices() {
     console.log("⚙️ App: Inicializando servicios...");
 
-    // Inicializar servicio de autenticación
-    this.authService = new AuthService();
+    // Inicializar HTTP Client
+    this.httpClient = new HttpClient();
+
+    // Inicializar servicios de autenticación con HttpClient compartido
+    this.authService = new AuthService(this.httpClient);
+
+    // Configurar token existente en HttpClient si existe
+    const existingToken = this.authService.getToken();
+    if (existingToken) {
+      this.httpClient.setAuthToken(existingToken);
+      console.log("✅ App: Token existente configurado en HttpClient");
+    }
+
+    // Inicializar APIs de datos
+    this.activitiesAPI = new ActivitiesAPI(this.httpClient);
+    this.categoriesAPI = new CategoriesAPI(this.httpClient);
+    this.enrollmentsAPI = new EnrollmentsAPI(this.httpClient);
 
     // Inicializar managers de componentes
     AlertManager.init(this.elements.alertContainer);
     LoaderManager.init(this.elements.loadingOverlay);
+
+    // Hacer APIs disponibles globalmente
+    window.app = {
+      httpClient: this.httpClient,
+      authService: this.authService,
+      activitiesAPI: this.activitiesAPI,
+      categoriesAPI: this.categoriesAPI,
+      enrollmentsAPI: this.enrollmentsAPI,
+      alert: AlertManager,
+      loader: LoaderManager,
+      router: null, // Se asignará después
+      auth: {
+        isAuthenticated: () => this.isAuthenticated(),
+        getCurrentUser: () => this.getCurrentUser(),
+        hasRole: (role) => this.hasRole(role),
+      },
+      // Métodos de manejo de sesión
+      handleLoginSuccess: (user) => this.handleLoginSuccess(user),
+      handleLogout: () => this.handleLogout(),
+      // Métodos de conveniencia
+      isAuthenticated: () => this.isAuthenticated(),
+      getCurrentUser: () => this.getCurrentUser(),
+      hasRole: (role) => this.hasRole(role),
+    };
 
     console.log("✅ App: Servicios inicializados");
   }
@@ -176,7 +239,17 @@ class App {
           console.log("✅ App: Usuario autenticado encontrado:", user.email);
         } else {
           // Token existe pero no hay datos de usuario, intentar obtenerlos
-          await this.refreshUserData();
+          // Pero no bloquear la inicialización si falla
+          console.log(
+            "⚠️ App: Token encontrado pero sin datos de usuario, intentando refrescar..."
+          );
+          this.refreshUserData().catch((error) => {
+            console.warn(
+              "⚠️ App: No se pudieron obtener datos del usuario al inicializar:",
+              error
+            );
+            this.authService.clearAuth();
+          });
         }
       } else {
         console.log("ℹ️ App: Usuario no autenticado");
@@ -253,6 +326,10 @@ class App {
 
     this.router = new Router(this.elements.mainContent, this);
     this.router.init();
+
+    // Asignar router al objeto global para acceso desde páginas
+    window.app.router = this.router;
+    window.router = this.router; // Alias directo
 
     console.log("✅ App: Router inicializado");
   }

@@ -205,18 +205,60 @@ class Router {
     console.log(`📄 Router: Cargando página: ${pageName}`);
 
     try {
-      // Importar dinámicamente el módulo de la página
-      const pageModule = await import(`./pages/${pageName}.js`);
-      const PageClass = pageModule.default;
+      // Mostrar loader
+      this.showLoader();
 
-      // Crear instancia de la página con el orden correcto: (router, app)
-      const page = new PageClass(this, this.app, params);
+      let page;
+
+      // Casos especiales para páginas que requieren APIs específicas
+      if (pageName === "dashboard") {
+        const { DashboardPage } = await import("./pages/dashboard.js");
+        page = new DashboardPage(this, window.app, params);
+      } else if (pageName === "profile") {
+        const { ProfilePage } = await import("./pages/profile.js");
+        page = new ProfilePage(this, window.app, params);
+      } else if (pageName === "login") {
+        const { LoginPage } = await import("./pages/login.js");
+        page = new LoginPage(this, window.app, params);
+      } else if (pageName === "register") {
+        const { RegisterPage } = await import("./pages/register.js");
+        page = new RegisterPage(this, window.app, params);
+      } else if (pageName === "home") {
+        const { HomePage } = await import("./pages/home.js");
+        page = new HomePage(this, window.app, params);
+      } else if (pageName === "error-404") {
+        const { Error404Page } = await import("./pages/error-404.js");
+        page = new Error404Page(this, window.app, params);
+      } else if (pageName === "error-403") {
+        const { Error403Page } = await import("./pages/error-403.js");
+        page = new Error403Page(this, window.app, params);
+      } else {
+        // Importar dinámicamente páginas estándar
+        const pageModule = await import(`./pages/${pageName}.js`);
+        const PageClass =
+          pageModule.default || pageModule[Object.keys(pageModule)[0]];
+        page = new PageClass(this, window.app, params);
+      }
 
       // Renderizar la página
-      await this.renderPage(page);
+      const content = await page.render();
+      this.container.innerHTML = content;
+
+      // Ejecutar scripts de inicialización de la página
+      if (page.init && typeof page.init === "function") {
+        await page.init(params);
+      }
+
+      // Actualizar estado activo en navbar
+      this.updateActiveNavigation();
+
+      console.log(`✅ Router: Página ${pageName} cargada correctamente`);
     } catch (error) {
       console.error(`❌ Router: Error cargando página ${pageName}:`, error);
       this.showErrorPage(error);
+    } finally {
+      // Ocultar loader
+      this.hideLoader();
     }
   }
 
@@ -255,7 +297,7 @@ class Router {
   /**
    * Renderizar una página en el contenedor
    */
-  async renderPage(page) {
+  async renderPage(page, params = {}) {
     try {
       // Mostrar loader
       this.showLoader();
@@ -264,12 +306,12 @@ class Router {
       this.container.innerHTML = "";
 
       // Renderizar la página
-      const content = await page.render();
+      const content = await page.render(params);
       this.container.innerHTML = content;
 
       // Ejecutar scripts de inicialización de la página
       if (page.init && typeof page.init === "function") {
-        await page.init();
+        await page.init(params);
       }
 
       // Actualizar estado activo en navbar
@@ -316,98 +358,46 @@ class Router {
   }
 
   /**
-   * Mostrar loader
+   * Mostrar loader global
    */
   showLoader() {
-    const loaderOverlay = document.getElementById("loading-overlay");
-    if (loaderOverlay) {
-      loaderOverlay.classList.remove("d-none");
+    if (window.app && window.app.loader) {
+      window.app.loader.show();
     }
   }
 
   /**
-   * Ocultar loader
+   * Ocultar loader global
    */
   hideLoader() {
-    const loaderOverlay = document.getElementById("loading-overlay");
-    if (loaderOverlay) {
-      loaderOverlay.classList.add("d-none");
+    if (window.app && window.app.loader) {
+      window.app.loader.hide();
     }
   }
 
   /**
-   * Actualizar navegación activa en el navbar
+   * Actualizar navegación activa en navbar
    */
   updateActiveNavigation() {
-    // Remover clases activas anteriores
-    document.querySelectorAll(".nav-link").forEach((link) => {
+    // Obtener el path actual sin parámetros
+    const currentPath = this.currentRoute || window.location.pathname;
+
+    // Remover clases activas existentes
+    document.querySelectorAll(".navbar-nav .nav-link").forEach((link) => {
       link.classList.remove("active");
     });
 
-    // Agregar clase activa al enlace actual
-    const currentPath = window.location.pathname;
+    // Agregar clase activa al enlace correspondiente
     const activeLink = document.querySelector(`[data-route="${currentPath}"]`);
     if (activeLink) {
       activeLink.classList.add("active");
     }
-  }
 
-  /**
-   * Obtener la ruta actual
-   */
-  getCurrentRoute() {
-    return this.currentRoute;
-  }
-
-  /**
-   * Verificar si estamos en una ruta específica
-   */
-  isCurrentRoute(path) {
-    return this.currentRoute === path;
-  }
-
-  /**
-   * Generar URL con parámetros
-   */
-  generateUrl(routePath, params = {}) {
-    let url = routePath;
-
-    // Reemplazar parámetros en la URL
-    for (const [key, value] of Object.entries(params)) {
-      url = url.replace(`:${key}`, value);
-    }
-
-    return url;
-  }
-
-  /**
-   * Manejar redirección con mensaje
-   */
-  redirectWithMessage(path, message, type = "info") {
-    if (message) {
-      // Guardar mensaje en sessionStorage para mostrarlo después de la redirección
-      sessionStorage.setItem("flashMessage", JSON.stringify({ message, type }));
-    }
-    this.navigate(path);
-  }
-
-  /**
-   * Obtener y mostrar mensaje flash si existe
-   */
-  checkFlashMessage() {
-    const flashMessage = sessionStorage.getItem("flashMessage");
-    if (flashMessage) {
-      const { message, type } = JSON.parse(flashMessage);
-      sessionStorage.removeItem("flashMessage");
-
-      // Importar y usar AlertManager
-      setTimeout(() => {
-        if (window.AlertManager) {
-          window.AlertManager[type](message);
-        }
-      }, 100);
-    }
+    console.log(
+      `🎯 Router: Navegación activa actualizada para: ${currentPath}`
+    );
   }
 }
 
-export default Router;
+// Exportar la clase usando ES6 modules
+export { Router };

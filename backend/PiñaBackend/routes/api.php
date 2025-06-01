@@ -31,6 +31,10 @@ Route::middleware('auth:sanctum')->group(function () {
         return $request->user();
     });
 
+    // Rutas de perfil de usuario
+    Route::put('/profile', [AuthController::class, 'updateProfile']);
+    Route::put('/profile/password', [AuthController::class, 'changePassword']);
+
     // Rutas de categorías que requieren autenticación (solo profesores)
     Route::post('/categories', [CategoryController::class, 'store']);
     Route::put('/categories/{category}', [CategoryController::class, 'update']);
