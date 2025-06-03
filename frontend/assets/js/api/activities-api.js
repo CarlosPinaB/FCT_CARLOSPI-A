@@ -80,7 +80,7 @@ class ActivitiesAPI {
       const response = await this.http.get(`${this.basePath}/${id}`);
 
       console.log(
-        `✅ ActivitiesAPI: Actividad "${response.data.title}" obtenida`
+        `✅ ActivitiesAPI: Actividad "${response.data.name}" obtenida`
       );
       return response.data;
     } catch (error) {
@@ -105,7 +105,7 @@ class ActivitiesAPI {
       const response = await this.http.post(this.basePath, activityData);
 
       console.log(
-        `✅ ActivitiesAPI: Actividad "${response.data.title}" creada exitosamente`
+        `✅ ActivitiesAPI: Actividad "${response.data.name}" creada exitosamente`
       );
       return response.data;
     } catch (error) {
@@ -130,7 +130,7 @@ class ActivitiesAPI {
       );
 
       console.log(
-        `✅ ActivitiesAPI: Actividad "${response.data.title}" actualizada exitosamente`
+        `✅ ActivitiesAPI: Actividad "${response.data.name}" actualizada exitosamente`
       );
       return response.data;
     } catch (error) {
@@ -196,8 +196,8 @@ class ActivitiesAPI {
 
     // Validaciones requeridas para creación
     if (isCreate) {
-      if (!data.title || data.title.trim().length === 0) {
-        errors.push("El título es requerido");
+      if (!data.name || data.name.trim().length === 0) {
+        errors.push("El nombre es requerido");
       }
       if (!data.description || data.description.trim().length === 0) {
         errors.push("La descripción es requerida");
@@ -214,8 +214,8 @@ class ActivitiesAPI {
     }
 
     // Validaciones comunes
-    if (data.title && data.title.length > 255) {
-      errors.push("El título no puede exceder 255 caracteres");
+    if (data.name && data.name.length > 255) {
+      errors.push("El nombre no puede exceder 255 caracteres");
     }
 
     if (
@@ -270,7 +270,7 @@ class ActivitiesAPI {
    */
   formatActivityData(formData) {
     const data = {
-      title: formData.title?.trim(),
+      name: formData.name?.trim(),
       description: formData.description?.trim(),
       category_id: formData.category_id ? parseInt(formData.category_id) : null,
       capacity: formData.capacity ? parseInt(formData.capacity) : null,

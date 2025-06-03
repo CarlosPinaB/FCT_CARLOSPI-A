@@ -31,6 +31,13 @@ class CategoriesAPI {
   }
 
   /**
+   * Alias para getAllCategories (compatibilidad)
+   */
+  async getCategories() {
+    return this.getAllCategories();
+  }
+
+  /**
    * Obtener una categoría específica por ID
    */
   async getCategory(id) {
