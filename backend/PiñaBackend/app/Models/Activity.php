@@ -48,4 +48,18 @@ class Activity extends Model
             ->withPivot('status')
             ->withTimestamps();
     }
+
+    public function approvedParticipants()
+    {
+        return $this->belongsToMany(User::class, 'enrollments')
+            ->withPivot('status')
+            ->withTimestamps()
+            ->wherePivot('status', 'approved');
+    }
+
+    // Accessor para current_participants
+    public function getCurrentParticipantsAttribute()
+    {
+        return $this->enrollments()->where('status', 'approved')->count();
+    }
 }

@@ -29,6 +29,11 @@ class ActivityController extends Controller
             ->orderBy('start_date', 'asc')
             ->get();
 
+        // Agregar current_participants a cada actividad
+        $activities->each(function ($activity) {
+            $activity->append('current_participants');
+        });
+
         return response()->json([
             'data' => $activities
         ]);
@@ -51,6 +56,7 @@ class ActivityController extends Controller
 
         $activity = Activity::create($data);
         $activity->load(['category', 'teacher']);
+        $activity->append('current_participants');
 
         return response()->json([
             'data' => $activity
@@ -63,6 +69,7 @@ class ActivityController extends Controller
     public function show(Activity $activity): JsonResponse
     {
         $activity->load(['category', 'teacher', 'participants']);
+        $activity->append('current_participants');
 
         return response()->json([
             'data' => $activity
@@ -76,6 +83,7 @@ class ActivityController extends Controller
     {
         $activity->update($request->validated());
         $activity->load(['category', 'teacher']);
+        $activity->append('current_participants');
 
         return response()->json([
             'data' => $activity
@@ -114,6 +122,11 @@ class ActivityController extends Controller
             ->where('user_id', $user->id)
             ->orderBy('start_date', 'asc')
             ->get();
+
+        // Agregar current_participants a cada actividad
+        $activities->each(function ($activity) {
+            $activity->append('current_participants');
+        });
 
         return response()->json([
             'data' => $activities
