@@ -55,4 +55,10 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/activities/{activity}/enrollments', [EnrollmentController::class, 'activityEnrollments']);
     Route::patch('/enrollments/{enrollment}/approve', [EnrollmentController::class, 'approve']);
     Route::patch('/enrollments/{enrollment}/reject', [EnrollmentController::class, 'reject']);
+
+    // Ruta para que profesores desinscriban estudiantes
+    Route::delete('/enrollments/{enrollment}/unenroll', [EnrollmentController::class, 'unenrollStudent']);
+
+    // Ruta para que profesores reinscríban estudiantes cancelados
+    Route::patch('/enrollments/{enrollment}/reenroll', [EnrollmentController::class, 'reenrollStudent']);
 });

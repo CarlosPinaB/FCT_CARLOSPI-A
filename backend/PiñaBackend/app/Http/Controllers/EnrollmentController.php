@@ -193,4 +193,93 @@ class EnrollmentController extends Controller
             'message' => 'Inscripción rechazada exitosamente.'
         ]);
     }
+
+    /**
+     * Unenroll a student from an activity (teacher only).
+     * Allows teachers to remove students from their activities.
+     */
+    public function unenrollStudent(Request $request, Enrollment $enrollment): JsonResponse
+    {
+        $user = $request->user();
+
+        // Cargar la actividad y el estudiante relacionados
+        $enrollment->load(['activity', 'student']);
+
+        // Solo el profesor propietario puede desinscribir estudiantes
+        if ($user->role !== 'profesor' || $enrollment->activity->user_id !== $user->id) {
+            return response()->json([
+                'message' => 'No tienes permisos para gestionar esta inscripción.'
+            ], 403);
+        }
+
+        // Verificar que la inscripción esté activa
+        if ($enrollment->status === 'cancelled') {
+            return response()->json([
+                'message' => 'El estudiante ya está desinscrito de esta actividad.'
+            ], 400);
+        }
+
+        // Actualizar el estado a cancelado
+        $enrollment->update(['status' => 'cancelled']);
+
+        return response()->json([
+            'message' => 'Estudiante desinscrito exitosamente.',
+            'data' => [
+                'enrollment_id' => $enrollment->id,
+                'student_name' => $enrollment->student->name,
+                'activity_name' => $enrollment->activity->name,
+                'status' => 'cancelled'
+            ]
+        ]);
+    }
+
+    /**
+     * Re-enroll a cancelled student in an activity (teacher only).
+     * Allows teachers to reinstate students who were previously cancelled.
+     */
+    public function reenrollStudent(Request $request, Enrollment $enrollment): JsonResponse
+    {
+        $user = $request->user();
+
+        // Cargar la actividad y el estudiante relacionados
+        $enrollment->load(['activity', 'student']);
+
+        // Solo el profesor propietario puede reinscribir estudiantes
+        if ($user->role !== 'profesor' || $enrollment->activity->user_id !== $user->id) {
+            return response()->json([
+                'message' => 'No tienes permisos para gestionar esta inscripción.'
+            ], 403);
+        }
+
+        // Verificar que la inscripción esté cancelada
+        if ($enrollment->status !== 'cancelled') {
+            return response()->json([
+                'message' => 'Solo se pueden reinscribir estudiantes que estén cancelados.'
+            ], 400);
+        }
+
+        // Verificar si la actividad está llena
+        $approvedEnrollments = Enrollment::where('activity_id', $enrollment->activity_id)
+            ->where('status', 'approved')
+            ->count();
+
+        if ($enrollment->activity->max_participants && $approvedEnrollments >= $enrollment->activity->max_participants) {
+            return response()->json([
+                'message' => 'No se puede reinscribir: la actividad está llena.'
+            ], 409);
+        }
+
+        // Actualizar el estado a aprobado
+        $enrollment->update(['status' => 'approved']);
+
+        return response()->json([
+            'message' => 'Estudiante reinscrito exitosamente.',
+            'data' => [
+                'enrollment_id' => $enrollment->id,
+                'student_name' => $enrollment->student->name,
+                'activity_name' => $enrollment->activity->name,
+                'status' => 'approved'
+            ]
+        ]);
+    }
 }

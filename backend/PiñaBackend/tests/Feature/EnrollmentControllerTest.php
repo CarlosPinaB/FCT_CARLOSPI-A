@@ -46,7 +46,7 @@ class EnrollmentControllerTest extends TestCase
         $this->assertDatabaseHas('enrollments', [
             'activity_id' => $activity->id,
             'user_id' => $student->id,
-            'status' => 'pending'
+            'status' => 'approved'
         ]);
     }
 
@@ -86,7 +86,7 @@ class EnrollmentControllerTest extends TestCase
         Enrollment::factory()->create([
             'activity_id' => $activity->id,
             'user_id' => $student->id,
-            'status' => 'pending'
+            'status' => 'approved'
         ]);
 
         Sanctum::actingAs($student);
@@ -359,5 +359,229 @@ class EnrollmentControllerTest extends TestCase
         $response = $this->postJson('/api/activities/999/enroll');
 
         $response->assertStatus(404);
+    }
+
+    #[Test]
+    public function teacher_can_unenroll_student_from_their_activity()
+    {
+        $teacher = User::factory()->create(['role' => 'profesor']);
+        $student = User::factory()->create(['role' => 'alumno']);
+        $activity = Activity::factory()->create(['user_id' => $teacher->id]);
+        $enrollment = Enrollment::factory()->create([
+            'activity_id' => $activity->id,
+            'user_id' => $student->id,
+            'status' => 'approved'
+        ]);
+
+        Sanctum::actingAs($teacher);
+
+        $response = $this->deleteJson("/api/enrollments/{$enrollment->id}/unenroll");
+
+        $response->assertStatus(200)
+            ->assertJson([
+                'message' => 'Estudiante desinscrito exitosamente.',
+                'data' => [
+                    'enrollment_id' => $enrollment->id,
+                    'student_name' => $student->name,
+                    'activity_name' => $activity->name,
+                    'status' => 'cancelled'
+                ]
+            ]);
+
+        $this->assertDatabaseHas('enrollments', [
+            'id' => $enrollment->id,
+            'status' => 'cancelled'
+        ]);
+    }
+
+    #[Test]
+    public function teacher_cannot_unenroll_student_from_other_teacher_activity()
+    {
+        $teacher1 = User::factory()->create(['role' => 'profesor']);
+        $teacher2 = User::factory()->create(['role' => 'profesor']);
+        $student = User::factory()->create(['role' => 'alumno']);
+        $activity = Activity::factory()->create(['user_id' => $teacher2->id]);
+        $enrollment = Enrollment::factory()->create([
+            'activity_id' => $activity->id,
+            'user_id' => $student->id,
+            'status' => 'approved'
+        ]);
+
+        Sanctum::actingAs($teacher1);
+
+        $response = $this->deleteJson("/api/enrollments/{$enrollment->id}/unenroll");
+
+        $response->assertStatus(403)
+            ->assertJson([
+                'message' => 'No tienes permisos para gestionar esta inscripción.'
+            ]);
+    }
+
+    #[Test]
+    public function student_cannot_unenroll_other_students()
+    {
+        $student1 = User::factory()->create(['role' => 'alumno']);
+        $student2 = User::factory()->create(['role' => 'alumno']);
+        $teacher = User::factory()->create(['role' => 'profesor']);
+        $activity = Activity::factory()->create(['user_id' => $teacher->id]);
+        $enrollment = Enrollment::factory()->create([
+            'activity_id' => $activity->id,
+            'user_id' => $student2->id,
+            'status' => 'approved'
+        ]);
+
+        Sanctum::actingAs($student1);
+
+        $response = $this->deleteJson("/api/enrollments/{$enrollment->id}/unenroll");
+
+        $response->assertStatus(403)
+            ->assertJson([
+                'message' => 'No tienes permisos para gestionar esta inscripción.'
+            ]);
+    }
+
+    #[Test]
+    public function teacher_cannot_unenroll_already_cancelled_enrollment()
+    {
+        $teacher = User::factory()->create(['role' => 'profesor']);
+        $activity = Activity::factory()->create(['user_id' => $teacher->id]);
+        $student = User::factory()->create(['role' => 'alumno']);
+
+        $enrollment = Enrollment::factory()->create([
+            'activity_id' => $activity->id,
+            'user_id' => $student->id,
+            'status' => 'cancelled'
+        ]);
+
+        Sanctum::actingAs($teacher);
+
+        $response = $this->deleteJson("/api/enrollments/{$enrollment->id}/unenroll");
+
+        $response->assertStatus(400)
+            ->assertJson([
+                'message' => 'El estudiante ya está desinscrito de esta actividad.'
+            ]);
+    }
+
+    #[Test]
+    public function teacher_can_reenroll_cancelled_student()
+    {
+        $teacher = User::factory()->create(['role' => 'profesor']);
+        $activity = Activity::factory()->create([
+            'user_id' => $teacher->id,
+            'max_participants' => 10
+        ]);
+        $student = User::factory()->create(['role' => 'alumno']);
+
+        // Crear inscripción cancelada
+        $enrollment = Enrollment::factory()->create([
+            'user_id' => $student->id,
+            'activity_id' => $activity->id,
+            'status' => 'cancelled'
+        ]);
+
+        Sanctum::actingAs($teacher);
+
+        $response = $this->patchJson("/api/enrollments/{$enrollment->id}/reenroll");
+
+        $response->assertStatus(200)
+            ->assertJson([
+                'message' => 'Estudiante reinscrito exitosamente.',
+                'data' => [
+                    'enrollment_id' => $enrollment->id,
+                    'student_name' => $student->name,
+                    'activity_name' => $activity->name,
+                    'status' => 'approved'
+                ]
+            ]);
+
+        // Verificar que el estado cambió en la BD
+        $this->assertDatabaseHas('enrollments', [
+            'id' => $enrollment->id,
+            'status' => 'approved'
+        ]);
+    }
+
+    #[Test]
+    public function teacher_cannot_reenroll_non_cancelled_student()
+    {
+        $teacher = User::factory()->create(['role' => 'profesor']);
+        $activity = Activity::factory()->create(['user_id' => $teacher->id]);
+        $student = User::factory()->create(['role' => 'alumno']);
+
+        // Crear inscripción aprobada
+        $enrollment = Enrollment::factory()->create([
+            'user_id' => $student->id,
+            'activity_id' => $activity->id,
+            'status' => 'approved'
+        ]);
+
+        Sanctum::actingAs($teacher);
+
+        $response = $this->patchJson("/api/enrollments/{$enrollment->id}/reenroll");
+
+        $response->assertStatus(400)
+            ->assertJson([
+                'message' => 'Solo se pueden reinscribir estudiantes que estén cancelados.'
+            ]);
+    }
+
+    #[Test]
+    public function teacher_cannot_reenroll_if_activity_is_full()
+    {
+        $teacher = User::factory()->create(['role' => 'profesor']);
+        $activity = Activity::factory()->create([
+            'user_id' => $teacher->id,
+            'max_participants' => 1 // Solo 1 lugar
+        ]);
+        $student1 = User::factory()->create(['role' => 'alumno']);
+        $student2 = User::factory()->create(['role' => 'alumno']);
+
+        // Crear una inscripción aprobada (llena la actividad)
+        Enrollment::factory()->create([
+            'user_id' => $student1->id,
+            'activity_id' => $activity->id,
+            'status' => 'approved'
+        ]);
+
+        // Crear inscripción cancelada para el segundo estudiante
+        $cancelledEnrollment = Enrollment::factory()->create([
+            'user_id' => $student2->id,
+            'activity_id' => $activity->id,
+            'status' => 'cancelled'
+        ]);
+
+        Sanctum::actingAs($teacher);
+
+        $response = $this->patchJson("/api/enrollments/{$cancelledEnrollment->id}/reenroll");
+
+        $response->assertStatus(409)
+            ->assertJson([
+                'message' => 'No se puede reinscribir: la actividad está llena.'
+            ]);
+    }
+
+    #[Test]
+    public function other_teacher_cannot_reenroll_student()
+    {
+        $teacher1 = User::factory()->create(['role' => 'profesor']);
+        $teacher2 = User::factory()->create(['role' => 'profesor']);
+        $activity = Activity::factory()->create(['user_id' => $teacher1->id]);
+        $student = User::factory()->create(['role' => 'alumno']);
+
+        $enrollment = Enrollment::factory()->create([
+            'user_id' => $student->id,
+            'activity_id' => $activity->id,
+            'status' => 'cancelled'
+        ]);
+
+        Sanctum::actingAs($teacher2);
+
+        $response = $this->patchJson("/api/enrollments/{$enrollment->id}/reenroll");
+
+        $response->assertStatus(403)
+            ->assertJson([
+                'message' => 'No tienes permisos para gestionar esta inscripción.'
+            ]);
     }
 }
