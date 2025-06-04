@@ -32,15 +32,26 @@ class EnrollmentController extends Controller
             ], 403);
         }
 
-        // Verificar si ya está inscrito
-        $existingEnrollment = Enrollment::where('activity_id', $activity->id)
+        // Verificar si ya está inscrito con una inscripción activa
+        $existingActiveEnrollment = Enrollment::where('activity_id', $activity->id)
             ->where('user_id', $user->id)
+            ->whereIn('status', ['approved', 'pending'])
             ->first();
 
-        if ($existingEnrollment) {
+        if ($existingActiveEnrollment) {
             return response()->json([
                 'message' => 'Ya estás inscrito en esta actividad.'
             ], 409);
+        }
+
+        // Si existe una inscripción cancelada, la eliminamos para permitir re-inscripción
+        $cancelledEnrollment = Enrollment::where('activity_id', $activity->id)
+            ->where('user_id', $user->id)
+            ->where('status', 'cancelled')
+            ->first();
+
+        if ($cancelledEnrollment) {
+            $cancelledEnrollment->delete();
         }
 
         // Verificar si la actividad está llena
