@@ -427,6 +427,54 @@ class EnrollmentsAPI {
   }
 
   /**
+   * Desinscribir un estudiante de una actividad (solo profesores)
+   */
+  async unenrollParticipant(enrollmentId) {
+    try {
+      console.log(
+        `❌ EnrollmentsAPI: Desinscribiendo participante ${enrollmentId}...`
+      );
+
+      const response = await this.http.delete(
+        `enrollments/${enrollmentId}/unenroll`
+      );
+
+      console.log("✅ EnrollmentsAPI: Participante desinscrito exitosamente");
+      return response.data;
+    } catch (error) {
+      console.error(
+        `❌ EnrollmentsAPI: Error desinscribiendo participante ${enrollmentId}:`,
+        error
+      );
+      throw error;
+    }
+  }
+
+  /**
+   * Reinscribir un estudiante cancelado en una actividad (solo profesores)
+   */
+  async reenrollParticipant(enrollmentId) {
+    try {
+      console.log(
+        `✅ EnrollmentsAPI: Reinscribiendo participante ${enrollmentId}...`
+      );
+
+      const response = await this.http.patch(
+        `enrollments/${enrollmentId}/reenroll`
+      );
+
+      console.log("✅ EnrollmentsAPI: Participante reinscrito exitosamente");
+      return response.data;
+    } catch (error) {
+      console.error(
+        `❌ EnrollmentsAPI: Error reinscribiendo participante ${enrollmentId}:`,
+        error
+      );
+      throw error;
+    }
+  }
+
+  /**
    * Obtener actividades recomendadas basadas en inscripciones previas
    */
   async getRecommendedActivities(limit = 5) {

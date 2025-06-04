@@ -41,15 +41,12 @@ class Router {
     this.addRoute("/login", () => this.loadPage("login"));
     this.addRoute("/register", () => this.loadPage("register"));
     this.addRoute("/activities", () => this.loadPage("activities"));
-    this.addRoute("/activity/:id", (params) =>
-      this.loadPage("activity-detail", params)
-    );
 
     // Rutas protegidas
     this.addRoute("/dashboard", () => this.loadProtectedPage("dashboard"));
     this.addRoute("/profile", () => this.loadProtectedPage("profile"));
 
-    // Rutas específicas de profesores
+    // Rutas específicas de profesores (ANTES de las rutas con parámetros)
     this.addRoute("/my-activities", () =>
       this.loadRoleProtectedPage("my-activities", "profesor")
     );
@@ -58,6 +55,11 @@ class Router {
     );
     this.addRoute("/activity/edit/:id", (params) =>
       this.loadRoleProtectedPage("activity-edit", "profesor", params)
+    );
+
+    // Rutas con parámetros (DESPUÉS de las rutas específicas)
+    this.addRoute("/activity/:id", (params) =>
+      this.loadPage("activity-detail", params)
     );
     this.addRoute("/activity/:id/participants", (params) =>
       this.loadRoleProtectedPage("participants", "profesor", params)
@@ -232,6 +234,29 @@ class Router {
       } else if (pageName === "error-403") {
         const { Error403Page } = await import("./pages/error-403.js");
         page = new Error403Page(this, window.app, params);
+      } else if (pageName === "activities") {
+        const { ActivitiesPage } = await import("./pages/activities.js");
+        page = new ActivitiesPage(this, window.app, params);
+      } else if (pageName === "activity-detail") {
+        const { ActivityDetailPage } = await import(
+          "./pages/activity-detail.js"
+        );
+        page = new ActivityDetailPage(this, window.app, params);
+      } else if (pageName === "activity-create") {
+        const { ActivityFormPage } = await import("./pages/activity-form.js");
+        page = new ActivityFormPage(this, window.app, params);
+      } else if (pageName === "activity-edit") {
+        const { ActivityFormPage } = await import("./pages/activity-form.js");
+        page = new ActivityFormPage(this, window.app, params);
+      } else if (pageName === "my-activities") {
+        const { MyActivitiesPage } = await import("./pages/my-activities.js");
+        page = new MyActivitiesPage(this, window.app, params);
+      } else if (pageName === "my-enrollments") {
+        const { MyEnrollmentsPage } = await import("./pages/my-enrollments.js");
+        page = new MyEnrollmentsPage(this, window.app, params);
+      } else if (pageName === "participants") {
+        const { ParticipantsPage } = await import("./pages/participants.js");
+        page = new ParticipantsPage(this, window.app, params);
       } else {
         // Importar dinámicamente páginas estándar
         const pageModule = await import(`./pages/${pageName}.js`);

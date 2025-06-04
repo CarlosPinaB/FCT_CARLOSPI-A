@@ -537,7 +537,7 @@ export class ActivitiesPage {
       }
 
       // Realizar inscripción
-      await this.app.enrollmentsAPI.enroll(activityId);
+      await this.app.enrollmentsAPI.enrollInActivity(activityId);
 
       this.app.alert.show("¡Te has inscrito exitosamente!", "success");
 

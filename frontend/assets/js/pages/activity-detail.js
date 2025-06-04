@@ -540,7 +540,7 @@ export class ActivityDetailPage {
         return;
       }
 
-      await this.app.enrollmentsAPI.enroll(this.activityId);
+      await this.app.enrollmentsAPI.enrollInActivity(this.activityId);
 
       this.app.alert.show("¡Te has inscrito exitosamente!", "success");
 

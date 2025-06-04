@@ -168,6 +168,7 @@ class App {
       auth: {
         isAuthenticated: () => this.isAuthenticated(),
         getCurrentUser: () => this.getCurrentUser(),
+        getUser: () => this.getCurrentUser(), // Alias para compatibilidad
         hasRole: (role) => this.hasRole(role),
       },
       // Métodos de manejo de sesión

@@ -489,7 +489,7 @@ class DashboardPage {
         (activity) => `
       <div class="d-flex align-items-center py-2 border-bottom">
         <div class="flex-grow-1">
-          <h6 class="mb-1">${activity.title}</h6>
+          <h6 class="mb-1">${activity.name}</h6>
           <small class="text-muted">
             <i class="fas fa-calendar me-1"></i>
             ${new Date(activity.start_date).toLocaleDateString()}
@@ -546,7 +546,7 @@ class DashboardPage {
         (enrollment) => `
       <div class="d-flex align-items-center py-2 border-bottom">
         <div class="flex-grow-1">
-          <h6 class="mb-1">${enrollment.activity.title}</h6>
+          <h6 class="mb-1">${enrollment.activity.name}</h6>
           <small class="text-muted">
             <i class="fas fa-calendar me-1"></i>
             ${new Date(enrollment.activity.start_date).toLocaleDateString()}
@@ -597,7 +597,7 @@ class DashboardPage {
         (activity) => `
       <div class="card border-0 bg-light mb-2">
         <div class="card-body py-2 px-3">
-          <h6 class="card-title mb-1 text-truncate">${activity.title}</h6>
+          <h6 class="card-title mb-1 text-truncate">${activity.name}</h6>
           <small class="text-muted d-block">
             <i class="fas fa-calendar me-1"></i>
             ${new Date(activity.start_date).toLocaleDateString()}

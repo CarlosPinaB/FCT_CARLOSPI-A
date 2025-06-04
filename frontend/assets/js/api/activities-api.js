@@ -172,7 +172,7 @@ class ActivitiesAPI {
       );
 
       const response = await this.http.get(
-        `${this.basePath}/${id}/participants`
+        `${this.basePath}/${id}/enrollments`
       );
 
       console.log(
