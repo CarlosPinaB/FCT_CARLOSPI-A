@@ -42,9 +42,31 @@ class EnrollmentsAPI {
         `❌ EnrollmentsAPI: Cancelando inscripción en actividad ${activityId}...`
       );
 
-      const response = await this.http.delete(
-        `${this.basePath}/${activityId}/unenroll`
+      // Primero obtener las inscripciones del usuario para encontrar el enrollment_id
+      const enrollments = await this.getMyEnrollments();
+
+      // Buscar la inscripción activa para esta actividad
+      const enrollment = enrollments.find((e) => {
+        const enrollmentActivityId = e.activity?.id || e.activity_id;
+        const isValidStatus = e.status === "active" || e.status === "approved";
+        return (
+          parseInt(enrollmentActivityId) === parseInt(activityId) &&
+          isValidStatus
+        );
+      });
+
+      if (!enrollment) {
+        throw new Error(
+          "No se encontró una inscripción activa para esta actividad"
+        );
+      }
+
+      console.log(
+        `🔍 EnrollmentsAPI: Encontrada inscripción ${enrollment.id} para actividad ${activityId}`
       );
+
+      // Usar la ruta correcta con enrollment_id
+      const response = await this.http.delete(`enrollments/${enrollment.id}`);
 
       console.log("✅ EnrollmentsAPI: Inscripción cancelada exitosamente");
       return response.data;

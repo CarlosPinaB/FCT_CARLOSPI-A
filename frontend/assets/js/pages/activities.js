@@ -12,6 +12,7 @@ export class ActivitiesPage {
     // Estado de la página
     this.activities = [];
     this.categories = [];
+    this.userEnrollments = []; // Nueva: inscripciones del usuario
     this.filteredActivities = [];
     this.loading = false;
     this.filters = {
@@ -154,28 +155,34 @@ export class ActivitiesPage {
    */
   async loadInitialData() {
     try {
-      // Debug: verificar qué está disponible en app
-      console.log("🔍 Debug app object:", this.app);
-      console.log("🔍 Debug categoriesAPI:", this.app.categoriesAPI);
-      console.log(
-        "🔍 Debug getCategories method:",
-        this.app.categoriesAPI?.getCategories
-      );
+      console.log("🔍 ActivitiesPage: Cargando datos iniciales...");
 
-      // Cargar actividades y categorías en paralelo
-      const [activitiesResponse, categoriesResponse] = await Promise.all([
+      // Preparar promesas para cargar datos
+      const promises = [
         this.app.activitiesAPI.getPublicActivities(),
         this.app.categoriesAPI.getCategories(),
-      ]);
+      ];
 
-      this.activities = activitiesResponse || [];
-      this.categories = categoriesResponse || [];
+      // Si el usuario está autenticado como alumno, cargar sus inscripciones
+      if (
+        this.app.auth.isAuthenticated() &&
+        this.app.auth.getCurrentUser()?.role === "alumno"
+      ) {
+        promises.push(this.app.enrollmentsAPI.getMyEnrollments());
+      }
+
+      // Cargar datos en paralelo
+      const responses = await Promise.all(promises);
+
+      this.activities = responses[0] || [];
+      this.categories = responses[1] || [];
+      this.userEnrollments = responses[2] || []; // Solo si es alumno
 
       // Cargar categorías en el select
       this.loadCategoriesSelect();
 
       console.log(
-        `📊 ActivitiesPage: ${this.activities.length} actividades y ${this.categories.length} categorías cargadas`
+        `📊 ActivitiesPage: ${this.activities.length} actividades, ${this.categories.length} categorías y ${this.userEnrollments.length} inscripciones cargadas`
       );
     } catch (error) {
       console.error(
@@ -365,6 +372,9 @@ export class ActivitiesPage {
    * Renderizar un item de actividad (formato lista detallada)
    */
   renderActivityItem(activity) {
+    // Debug: log de la actividad que se está renderizando
+    console.log(`🎨 Renderizando actividad:`, activity);
+
     const categoryName = this.getCategoryName(activity.category_id);
     const formattedStartDate = this.formatDate(activity.start_date);
     const formattedEndDate = this.formatDate(activity.end_date);
@@ -377,10 +387,30 @@ export class ActivitiesPage {
     const isAvailable =
       !activity.current_participants ||
       activity.current_participants < activity.max_participants;
+
+    // Verificar si el usuario ya está inscrito en esta actividad
+    const isEnrolled = this.isUserEnrolledInActivity(activity.id);
+
     const canEnroll =
       this.app.auth.isAuthenticated() &&
       this.app.auth.getCurrentUser()?.role === "alumno" &&
-      isAvailable;
+      isAvailable &&
+      !isEnrolled;
+
+    const canUnenroll =
+      this.app.auth.isAuthenticated() &&
+      this.app.auth.getCurrentUser()?.role === "alumno" &&
+      isEnrolled;
+
+    // Debug: log de los estados calculados
+    console.log(`🎯 Actividad ${activity.id} - Estados:`, {
+      isAvailable,
+      isEnrolled,
+      canEnroll,
+      canUnenroll,
+      activityId: activity.id,
+      currentUser: this.app.auth.getCurrentUser()?.role,
+    });
 
     return `
       <div class="activity-item card border-0 shadow-sm mb-3" data-activity-id="${
@@ -462,7 +492,7 @@ export class ActivitiesPage {
                   Ver Detalles
                 </button>
                 
-                <!-- Botón inscribirse (solo para alumnos) -->
+                <!-- Botón inscribirse (solo para alumnos no inscritos) -->
                 ${
                   canEnroll
                     ? `
@@ -470,6 +500,30 @@ export class ActivitiesPage {
                     <i class="fas fa-user-plus me-2"></i>
                     Inscribirse
                   </button>
+                `
+                    : ""
+                }
+                
+                <!-- Botón cancelar inscripción (solo para alumnos inscritos) -->
+                ${
+                  canUnenroll
+                    ? `
+                  <button type="button" class="btn btn-outline-danger btn-unenroll" data-activity-id="${activity.id}">
+                    <i class="fas fa-user-times me-2"></i>
+                    Cancelar Inscripción
+                  </button>
+                `
+                    : ""
+                }
+                
+                <!-- Badge de inscrito -->
+                ${
+                  isEnrolled
+                    ? `
+                  <div class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 d-flex align-items-center justify-content-center py-2">
+                    <i class="fas fa-check-circle me-1"></i>
+                    ¡Inscrito!
+                  </div>
                 `
                     : ""
                 }
@@ -496,7 +550,9 @@ export class ActivitiesPage {
     // Botones de ver detalles
     document.querySelectorAll(".btn-detail").forEach((btn) => {
       btn.addEventListener("click", (e) => {
-        const activityId = e.target.getAttribute("data-activity-id");
+        const button = e.currentTarget || e.target.closest(".btn-detail");
+        const activityId = button.getAttribute("data-activity-id");
+        console.log(`🔍 Ver detalles - ActivityId capturado:`, activityId);
         this.router.navigate(`/activity/${activityId}`);
       });
     });
@@ -504,10 +560,80 @@ export class ActivitiesPage {
     // Botones de inscripción
     document.querySelectorAll(".btn-enroll").forEach((btn) => {
       btn.addEventListener("click", async (e) => {
-        const activityId = e.target.getAttribute("data-activity-id");
+        const button = e.currentTarget || e.target.closest(".btn-enroll");
+        const activityId = button.getAttribute("data-activity-id");
+        console.log(`🔍 Inscripción - ActivityId capturado:`, activityId);
+
+        if (!activityId || activityId === "null") {
+          console.error("❌ ActivityId inválido:", activityId);
+          this.app.alert.show("Error: ID de actividad inválido", "danger");
+          return;
+        }
+
         await this.handleEnrollment(activityId);
       });
     });
+
+    // Botones de cancelar inscripción
+    document.querySelectorAll(".btn-unenroll").forEach((btn) => {
+      btn.addEventListener("click", async (e) => {
+        const button = e.currentTarget || e.target.closest(".btn-unenroll");
+        const activityId = button.getAttribute("data-activity-id");
+        console.log(`🔍 Cancelar - ActivityId capturado:`, activityId);
+
+        if (!activityId || activityId === "null") {
+          console.error("❌ ActivityId inválido:", activityId);
+          this.app.alert.show("Error: ID de actividad inválido", "danger");
+          return;
+        }
+
+        await this.handleUnenrollment(activityId);
+      });
+    });
+  }
+
+  /**
+   * Verificar si el usuario está inscrito en una actividad
+   */
+  isUserEnrolledInActivity(activityId) {
+    // Debug: log de las inscripciones para investigar
+    console.log(`🔍 Verificando inscripción para actividad ${activityId}`);
+    console.log("📋 Inscripciones del usuario:", this.userEnrollments);
+
+    const targetActivityId = parseInt(activityId);
+
+    const isEnrolled = this.userEnrollments.some((enrollment) => {
+      console.log(`🔍 Checking enrollment:`, enrollment);
+
+      // Verificar múltiples formas de obtener el activity ID
+      let enrollmentActivityId = null;
+
+      if (enrollment.activity && enrollment.activity.id) {
+        enrollmentActivityId = parseInt(enrollment.activity.id);
+      } else if (enrollment.activity_id) {
+        enrollmentActivityId = parseInt(enrollment.activity_id);
+      }
+
+      const hasMatchingActivity = enrollmentActivityId === targetActivityId;
+      const isValidStatus =
+        enrollment.status === "active" || enrollment.status === "approved";
+
+      console.log(`🔍 Enrollment details:`, {
+        enrollmentId: enrollment.id,
+        status: enrollment.status,
+        activityId: enrollmentActivityId,
+        targetActivityId: targetActivityId,
+        hasMatchingActivity,
+        isValidStatus,
+      });
+
+      const matches = hasMatchingActivity && isValidStatus;
+      console.log(`✅ Match for activity ${activityId}:`, matches);
+      return matches;
+    });
+
+    console.log(`🎯 Resultado final para actividad ${activityId}:`, isEnrolled);
+    return isEnrolled;
   }
 
   /**
@@ -537,6 +663,7 @@ export class ActivitiesPage {
       }
 
       // Realizar inscripción
+      this.app.loader.show("Inscribiendo...");
       await this.app.enrollmentsAPI.enrollInActivity(activityId);
 
       this.app.alert.show("¡Te has inscrito exitosamente!", "success");
@@ -544,11 +671,49 @@ export class ActivitiesPage {
       // Recargar actividades para actualizar contadores
       await this.loadInitialData();
       await this.filterAndRenderActivities();
+
+      this.app.loader.hide();
     } catch (error) {
       console.error("❌ ActivitiesPage: Error en inscripción:", error);
       const message =
         error.message || "Error al inscribirse. Inténtalo de nuevo.";
       this.app.alert.show(message, "danger");
+      this.app.loader.hide();
+    }
+  }
+
+  /**
+   * Manejar cancelación de inscripción
+   */
+  async handleUnenrollment(activityId) {
+    try {
+      // Mostrar confirmación
+      if (
+        !confirm(
+          "¿Estás seguro de que quieres cancelar tu inscripción a esta actividad?\n\nEsta acción no se puede deshacer."
+        )
+      ) {
+        return;
+      }
+
+      // Realizar cancelación
+      this.app.loader.show("Cancelando inscripción...");
+      await this.app.enrollmentsAPI.unenrollFromActivity(activityId);
+
+      this.app.alert.show("Inscripción cancelada exitosamente", "success");
+
+      // Recargar actividades para actualizar contadores
+      await this.loadInitialData();
+      await this.filterAndRenderActivities();
+
+      this.app.loader.hide();
+    } catch (error) {
+      console.error("❌ ActivitiesPage: Error cancelando inscripción:", error);
+      const message =
+        error.message ||
+        "Error al cancelar la inscripción. Inténtalo de nuevo.";
+      this.app.alert.show(message, "danger");
+      this.app.loader.hide();
     }
   }
 

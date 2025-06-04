@@ -368,8 +368,9 @@ class DashboardPage {
 
         stats = {
           totalEnrollments: enrollments.length,
-          activeEnrollments: enrollments.filter((e) => e.status === "active")
-            .length,
+          activeEnrollments: enrollments.filter(
+            (e) => e.status === "active" || e.status === "approved"
+          ).length,
           availableActivities: allActivities.length,
           thisMonth: enrollments.filter(
             (e) =>
@@ -558,9 +559,15 @@ class DashboardPage {
         </div>
         <div class="text-end">
           <span class="badge bg-${
-            enrollment.status === "active" ? "success" : "warning"
+            enrollment.status === "active" || enrollment.status === "approved"
+              ? "success"
+              : "warning"
           }">
-            ${enrollment.status === "active" ? "Inscrito" : "Cancelado"}
+            ${
+              enrollment.status === "active" || enrollment.status === "approved"
+                ? "Inscrito"
+                : "Cancelado"
+            }
           </span>
         </div>
       </div>
