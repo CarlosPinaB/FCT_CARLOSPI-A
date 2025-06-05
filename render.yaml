@@ -23,27 +23,17 @@ services:
       - key: LOG_STDERR_FORMATTER
         value: Monolog\Formatter\JsonFormatter
       - key: DB_CONNECTION
-        value: mysql
+        value: pgsql
       - key: DB_HOST
-        fromDatabase:
-          name: actividades-db
-          property: host
+        value: dpg-d112fn14d50c739udlj0-a
       - key: DB_PORT
-        fromDatabase:
-          name: actividades-db
-          property: port
+        value: 5432
       - key: DB_DATABASE
-        fromDatabase:
-          name: actividades-db
-          property: database
+        value: actividades_db
       - key: DB_USERNAME
-        fromDatabase:
-          name: actividades-db
-          property: user
+        value: actividades_user
       - key: DB_PASSWORD
-        fromDatabase:
-          name: actividades-db
-          property: password
+        value: grWSxu3tlzOEMggwCRgssjK44223hQVD
       - key: CACHE_DRIVER
         value: array
       - key: SESSION_DRIVER
