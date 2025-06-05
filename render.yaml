@@ -2,19 +2,10 @@ services:
   # Backend Laravel API
   - type: web
     name: actividades-backend
-    env: php
+    env: docker
     repo: https://github.com/CarlosPinaB/FCT_CARLOSPI-A.git # Cambiar por tu repo
     rootDir: backend
-    buildCommand: |
-      composer install --no-dev --optimize-autoloader &&
-      php artisan key:generate --force &&
-      php artisan migrate --force &&
-      php artisan db:seed --force &&
-      php artisan config:cache &&
-      php artisan route:cache &&
-      php artisan view:cache &&
-      php artisan storage:link
-    startCommand: php artisan serve --host=0.0.0.0 --port=$PORT
+    dockerfilePath: ./Dockerfile
     plan: free
     envVars:
       - key: APP_ENV
