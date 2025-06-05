@@ -2,14 +2,8 @@
 
 echo "🚀 Iniciando aplicación Laravel..."
 
-# Esperar a que la base de datos esté disponible
-echo "⏳ Esperando a que la base de datos PostgreSQL esté disponible..."
-while ! pg_isready -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USERNAME"; do
-    echo "⏳ Base de datos no disponible, esperando 3 segundos..."
-    sleep 3
-done
-
-echo "✅ Base de datos conectada!"
+# Nota: Laravel manejará la conexión a la base de datos automáticamente
+echo "🚀 Iniciando configuración de Laravel..."
 
 # Ejecutar migraciones y configuración
 echo "🔧 Ejecutando configuración de Laravel..."
