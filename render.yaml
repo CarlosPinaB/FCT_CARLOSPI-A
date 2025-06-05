@@ -2,10 +2,9 @@ services:
   # Backend Laravel API
   - type: web
     name: actividades-backend
-    runtime: php
     env: php
     repo: https://github.com/CarlosPinaB/FCT_CARLOSPI-A.git # Cambiar por tu repo
-    rootDir: backend/PiñaBackend
+    rootDir: backend
     buildCommand: |
       composer install --no-dev --optimize-autoloader &&
       php artisan key:generate --force &&
@@ -70,8 +69,9 @@ services:
         value: "https://actividades-frontend.onrender.com,http://localhost:3000"
 
   # Frontend estático
-  - type: static_site
+  - type: web
     name: actividades-frontend
+    env: static
     repo: https://github.com/CarlosPinaB/FCT_CARLOSPI-A.git # Cambiar por tu repo
     rootDir: frontend
     buildCommand: |
