@@ -1,0 +1,94 @@
+services:
+  # Backend Laravel API
+  - type: web
+    name: actividades-backend
+    runtime: php
+    env: php
+    repo: https://github.com/CarlosPinaB/FCT_CARLOSPI-A.git # Cambiar por tu repo
+    rootDir: backend/PiñaBackend
+    buildCommand: |
+      composer install --no-dev --optimize-autoloader &&
+      php artisan key:generate --force &&
+      php artisan migrate --force &&
+      php artisan db:seed --force &&
+      php artisan config:cache &&
+      php artisan route:cache &&
+      php artisan view:cache &&
+      php artisan storage:link
+    startCommand: php artisan serve --host=0.0.0.0 --port=$PORT
+    plan: free
+    envVars:
+      - key: APP_ENV
+        value: production
+      - key: APP_DEBUG
+        value: false
+      - key: APP_KEY
+        generateValue: true
+      - key: APP_NAME
+        value: "Sistema de Actividades Extraescolares"
+      - key: APP_URL
+        value: https://actividades-backend.onrender.com
+      - key: LOG_CHANNEL
+        value: stderr
+      - key: LOG_STDERR_FORMATTER
+        value: Monolog\Formatter\JsonFormatter
+      - key: DB_CONNECTION
+        value: mysql
+      - key: DB_HOST
+        fromDatabase:
+          name: actividades-db
+          property: host
+      - key: DB_PORT
+        fromDatabase:
+          name: actividades-db
+          property: port
+      - key: DB_DATABASE
+        fromDatabase:
+          name: actividades-db
+          property: database
+      - key: DB_USERNAME
+        fromDatabase:
+          name: actividades-db
+          property: user
+      - key: DB_PASSWORD
+        fromDatabase:
+          name: actividades-db
+          property: password
+      - key: CACHE_DRIVER
+        value: array
+      - key: SESSION_DRIVER
+        value: cookie
+      - key: SESSION_LIFETIME
+        value: 120
+      - key: QUEUE_CONNECTION
+        value: sync
+      - key: SANCTUM_STATEFUL_DOMAINS
+        value: "actividades-frontend.onrender.com,localhost:3000"
+      - key: SESSION_DOMAIN
+        value: ".onrender.com"
+      - key: CORS_ALLOWED_ORIGINS
+        value: "https://actividades-frontend.onrender.com,http://localhost:3000"
+
+  # Frontend estático
+  - type: static_site
+    name: actividades-frontend
+    repo: https://github.com/CarlosPinaB/FCT_CARLOSPI-A.git # Cambiar por tu repo
+    rootDir: frontend
+    buildCommand: |
+      echo "✅ Frontend build iniciado" &&
+      echo "🔧 Configurando frontend..." &&
+      ls -la &&
+      echo "✅ Frontend listo para despliegue"
+    staticPublishPath: .
+    envVars:
+      - key: API_BASE_URL
+        value: https://actividades-backend.onrender.com/api
+      - key: BACKEND_URL
+        value: https://actividades-backend.onrender.com
+
+# Base de datos MySQL
+databases:
+  - name: actividades-db
+    databaseName: actividades_db
+    user: actividades_user
+    plan: free

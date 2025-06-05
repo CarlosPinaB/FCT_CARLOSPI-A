@@ -4,8 +4,10 @@
  */
 
 export class HttpClient {
-  constructor(baseURL = "http://localhost:8000/api") {
-    this.baseURL = baseURL;
+  constructor(baseURL = null) {
+    // Usar configuración automática si no se especifica baseURL
+    this.baseURL =
+      baseURL || window.APP_CONFIG?.API_BASE_URL || "http://localhost:8000/api";
     this.token = null;
     this.defaultHeaders = {
       "Content-Type": "application/json",
