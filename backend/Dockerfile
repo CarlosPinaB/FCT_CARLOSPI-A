@@ -1,17 +1,29 @@
 # Usar PHP 8.2 con Apache
 FROM php:8.2-apache
 
-# Instalar extensiones PHP necesarias para Laravel
-RUN apt-get update && apt-get install -y \
+# Actualizar repositorios
+RUN apt-get update
+
+# Instalar dependencias básicas
+RUN apt-get install -y \
     git \
     curl \
+    zip \
+    unzip \
+    postgresql-client
+
+# Instalar dependencias para extensiones PHP
+RUN apt-get install -y \
     libpng-dev \
     libonig-dev \
     libxml2-dev \
-    zip \
-    unzip \
-    postgresql-client \
-    && docker-php-ext-install pdo_pgsql pgsql mbstring exif pcntl bcmath gd
+    libpq-dev
+
+# Instalar extensiones PHP básicas
+RUN docker-php-ext-install mbstring exif pcntl bcmath gd
+
+# Instalar extensiones PostgreSQL por separado
+RUN docker-php-ext-install pdo_pgsql pgsql
 
 # Instalar Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
