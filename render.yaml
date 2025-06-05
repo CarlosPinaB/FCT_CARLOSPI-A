@@ -70,8 +70,9 @@ services:
         value: "https://actividades-frontend.onrender.com,http://localhost:3000"
 
   # Frontend estático
-  - type: static_site
+  - type: web
     name: actividades-frontend
+    env: static
     repo: https://github.com/CarlosPinaB/FCT_CARLOSPI-A.git # Cambiar por tu repo
     rootDir: frontend
     buildCommand: |
