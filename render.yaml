@@ -25,15 +25,23 @@ services:
       - key: DB_CONNECTION
         value: pgsql
       - key: DB_HOST
-        value: dpg-d112fn14d50c739udlj0-a
+        value: dpg-d112fn14d50c739udlj0-a.oregon-postgres.render.com
       - key: DB_PORT
-        value: 5432
+        fromDatabase:
+          name: actividades-db
+          property: port
       - key: DB_DATABASE
-        value: actividades_db
+        fromDatabase:
+          name: actividades-db
+          property: database
       - key: DB_USERNAME
-        value: actividades_user
+        fromDatabase:
+          name: actividades-db
+          property: user
       - key: DB_PASSWORD
-        value: grWSxu3tlzOEMggwCRgssjK44223hQVD
+        fromDatabase:
+          name: actividades-db
+          property: password
       - key: CACHE_DRIVER
         value: array
       - key: SESSION_DRIVER
