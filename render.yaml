@@ -2,10 +2,9 @@ services:
   # Backend Laravel API
   - type: web
     name: actividades-backend
-    runtime: php
     env: php
     repo: https://github.com/CarlosPinaB/FCT_CARLOSPI-A.git # Cambiar por tu repo
-    rootDir: backend/PiñaBackend
+    rootDir: backend
     buildCommand: |
       composer install --no-dev --optimize-autoloader &&
       php artisan key:generate --force &&
