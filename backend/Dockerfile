@@ -41,6 +41,9 @@ COPY . .
 # Instalar dependencias de Composer
 RUN composer install --no-dev --optimize-autoloader
 
+# Crear archivo .env base
+RUN cp .env.example .env || echo "APP_NAME=Actividades\nAPP_ENV=production\nAPP_DEBUG=false\nAPP_URL=https://actividades-backend.onrender.com\nLOG_CHANNEL=stderr\nDB_CONNECTION=pgsql" > .env
+
 # Establecer permisos
 RUN chown -R www-data:www-data /var/www/html \
     && chmod -R 755 /var/www/html/storage \
@@ -50,4 +53,4 @@ RUN chown -R www-data:www-data /var/www/html \
 EXPOSE 80
 
 # Comando de inicio simple
-CMD ["sh", "-c", "php artisan key:generate --force && php artisan migrate --force && php artisan db:seed --force && php artisan config:cache && php artisan storage:link && apache2-foreground"]
+CMD ["sh", "-c", "echo 'Iniciando Laravel...' && php artisan key:generate --force && echo 'Migrando DB...' && php artisan migrate --force && echo 'Sembrando datos...' && php artisan db:seed --force && echo 'Iniciando Apache...' && apache2-foreground"]
