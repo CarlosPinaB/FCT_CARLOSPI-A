@@ -46,12 +46,8 @@ RUN chown -R www-data:www-data /var/www/html \
     && chmod -R 755 /var/www/html/storage \
     && chmod -R 755 /var/www/html/bootstrap/cache
 
-# Crear script de inicio
-COPY start.sh /usr/local/bin/start.sh
-RUN chmod +x /usr/local/bin/start.sh
-
 # Exponer puerto
 EXPOSE 80
 
-# Comando de inicio
-CMD ["/usr/local/bin/start.sh"]
+# Comando de inicio simple
+CMD ["sh", "-c", "php artisan key:generate --force && php artisan migrate --force && php artisan db:seed --force && php artisan config:cache && php artisan storage:link && apache2-foreground"]
