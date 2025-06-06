@@ -62,8 +62,10 @@ RUN echo "APP_NAME=Actividades" > .env && \
     echo "QUEUE_CONNECTION=sync" >> .env && \
     echo "SESSION_DRIVER=file" >> .env && \
     echo "SESSION_LIFETIME=120" >> .env && \
-    echo "DB_SSLMODE=disable" >> .env && \
-    echo "PGSSLMODE=disable" >> .env
+    echo "DB_SSLMODE=require" >> .env && \
+    echo "PGSSLCERT=" >> .env && \
+    echo "PGSSLKEY=" >> .env && \
+    echo "PGSSLROOTCERT=" >> .env
 
 # Establecer permisos
 RUN chown -R www-data:www-data /var/www/html \
