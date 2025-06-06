@@ -43,7 +43,9 @@ services:
           name: actividades-db
           property: password
       - key: DB_SSLMODE
-        value: require
+        value: disable
+      - key: PGSSLMODE
+        value: disable
       - key: CACHE_DRIVER
         value: array
       - key: SESSION_DRIVER

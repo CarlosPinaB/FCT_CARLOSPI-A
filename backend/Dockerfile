@@ -61,7 +61,9 @@ RUN echo "APP_NAME=Actividades" > .env && \
     echo "FILESYSTEM_DISK=local" >> .env && \
     echo "QUEUE_CONNECTION=sync" >> .env && \
     echo "SESSION_DRIVER=file" >> .env && \
-    echo "SESSION_LIFETIME=120" >> .env
+    echo "SESSION_LIFETIME=120" >> .env && \
+    echo "DB_SSLMODE=disable" >> .env && \
+    echo "PGSSLMODE=disable" >> .env
 
 # Establecer permisos
 RUN chown -R www-data:www-data /var/www/html \
