@@ -41,8 +41,27 @@ COPY . .
 # Instalar dependencias de Composer
 RUN composer install --no-dev --optimize-autoloader
 
-# Crear archivo .env base con todas las variables necesarias
-RUN echo "APP_NAME=Actividades\nAPP_ENV=production\nAPP_KEY=\nAPP_DEBUG=false\nAPP_URL=https://actividades-backend.onrender.com\nLOG_CHANNEL=stderr\nLOG_DEPRECATIONS_CHANNEL=null\nLOG_LEVEL=debug\nDB_CONNECTION=pgsql\nDB_HOST=\nDB_PORT=5432\nDB_DATABASE=\nDB_USERNAME=\nDB_PASSWORD=\nBROADCAST_DRIVER=log\nCACHE_DRIVER=file\nFILESYSTEM_DISK=local\nQUEUE_CONNECTION=sync\nSESSION_DRIVER=file\nSESSION_LIFETIME=120" > .env
+# Crear archivo .env línea por línea para asegurar formato correcto
+RUN echo "APP_NAME=Actividades" > .env && \
+    echo "APP_ENV=production" >> .env && \
+    echo "APP_KEY=base64:YourBase64SecretKeyHere1234567890ABCDEFGHIJ=" >> .env && \
+    echo "APP_DEBUG=false" >> .env && \
+    echo "APP_URL=https://actividades-backend.onrender.com" >> .env && \
+    echo "LOG_CHANNEL=stderr" >> .env && \
+    echo "LOG_DEPRECATIONS_CHANNEL=null" >> .env && \
+    echo "LOG_LEVEL=debug" >> .env && \
+    echo "DB_CONNECTION=pgsql" >> .env && \
+    echo "DB_HOST=" >> .env && \
+    echo "DB_PORT=5432" >> .env && \
+    echo "DB_DATABASE=" >> .env && \
+    echo "DB_USERNAME=" >> .env && \
+    echo "DB_PASSWORD=" >> .env && \
+    echo "BROADCAST_DRIVER=log" >> .env && \
+    echo "CACHE_DRIVER=file" >> .env && \
+    echo "FILESYSTEM_DISK=local" >> .env && \
+    echo "QUEUE_CONNECTION=sync" >> .env && \
+    echo "SESSION_DRIVER=file" >> .env && \
+    echo "SESSION_LIFETIME=120" >> .env
 
 # Establecer permisos
 RUN chown -R www-data:www-data /var/www/html \
@@ -52,5 +71,5 @@ RUN chown -R www-data:www-data /var/www/html \
 # Exponer puerto
 EXPOSE 80
 
-# Comando de inicio simple
-CMD ["sh", "-c", "echo 'Iniciando Laravel...' && php artisan key:generate --force && echo 'Migrando DB...' && php artisan migrate --force && echo 'Sembrando datos...' && php artisan db:seed --force && echo 'Iniciando Apache...' && apache2-foreground"]
+# Comando de inicio simple con verificación de .env
+CMD ["sh", "-c", "echo 'Iniciando Laravel...' && echo 'Contenido de .env:' && cat .env && echo '--- Fin .env ---' && echo 'Migrando DB...' && php artisan migrate --force && echo 'Sembrando datos...' && php artisan db:seed --force && echo 'Iniciando Apache...' && apache2-foreground"]
