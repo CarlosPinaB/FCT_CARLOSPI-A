@@ -41,8 +41,8 @@ COPY . .
 # Instalar dependencias de Composer
 RUN composer install --no-dev --optimize-autoloader
 
-# Crear archivo .env base
-RUN cp .env.example .env || echo "APP_NAME=Actividades\nAPP_ENV=production\nAPP_DEBUG=false\nAPP_URL=https://actividades-backend.onrender.com\nLOG_CHANNEL=stderr\nDB_CONNECTION=pgsql" > .env
+# Crear archivo .env base con todas las variables necesarias
+RUN echo "APP_NAME=Actividades\nAPP_ENV=production\nAPP_KEY=\nAPP_DEBUG=false\nAPP_URL=https://actividades-backend.onrender.com\nLOG_CHANNEL=stderr\nLOG_DEPRECATIONS_CHANNEL=null\nLOG_LEVEL=debug\nDB_CONNECTION=pgsql\nDB_HOST=\nDB_PORT=5432\nDB_DATABASE=\nDB_USERNAME=\nDB_PASSWORD=\nBROADCAST_DRIVER=log\nCACHE_DRIVER=file\nFILESYSTEM_DISK=local\nQUEUE_CONNECTION=sync\nSESSION_DRIVER=file\nSESSION_LIFETIME=120" > .env
 
 # Establecer permisos
 RUN chown -R www-data:www-data /var/www/html \
