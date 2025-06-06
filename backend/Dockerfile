@@ -76,4 +76,4 @@ RUN chown -R www-data:www-data /var/www/html \
 EXPOSE 80
 
 # Comando de inicio simple con verificación de .env
-CMD ["sh", "-c", "echo 'Iniciando Laravel...' && echo 'Contenido de .env:' && cat .env && echo '--- Fin .env ---' && echo 'Migrando DB...' && php artisan migrate --force && echo 'Sembrando datos...' && php artisan db:seed --force && echo 'Iniciando Apache...' && apache2-foreground"]
+CMD ["sh", "-c", "echo 'Iniciando Laravel...' && echo 'Contenido de .env:' && cat .env && echo '--- Fin .env ---' && echo 'Migrando DB...' && php artisan migrate --force && echo 'Sembrando datos (opcional)...' && php artisan db:seed --force || echo 'Datos ya existen, continuando...' && echo 'Iniciando Apache...' && apache2-foreground"]
