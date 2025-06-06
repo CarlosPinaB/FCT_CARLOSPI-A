@@ -25,7 +25,9 @@ services:
       - key: DB_CONNECTION
         value: pgsql
       - key: DB_HOST
-        value: dpg-d112fn14d50c739udlj0-a.oregon-postgres.render.com
+        fromDatabase:
+          name: actividades-db
+          property: host
       - key: DB_PORT
         fromDatabase:
           name: actividades-db
