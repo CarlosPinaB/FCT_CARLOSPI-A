@@ -456,7 +456,13 @@ export class ActivityDetailPage {
     const current = this.activity.current_participants || 0;
     const max = this.activity.max_participants;
     const percentage = max > 0 ? (current / max) * 100 : 0;
-    const isAvailable = current < max;
+
+    // Verificar estado de la actividad
+    const now = new Date();
+    const endDate = new Date(this.activity.end_date);
+    const isPastActivity = endDate < now;
+
+    const hasAvailablePlaces = current < max;
 
     participantsElement.innerHTML = `
       <div class="mb-3">
@@ -466,16 +472,30 @@ export class ActivityDetailPage {
         </div>
         <div class="progress">
           <div class="progress-bar ${
-            isAvailable ? "bg-success" : "bg-warning"
+            isPastActivity
+              ? "bg-secondary"
+              : hasAvailablePlaces
+              ? "bg-success"
+              : "bg-warning"
           }" 
                style="width: ${percentage}%"></div>
         </div>
       </div>
       <div class="text-center">
         <span class="badge ${
-          isAvailable ? "bg-success" : "bg-warning text-dark"
+          isPastActivity
+            ? "bg-secondary"
+            : hasAvailablePlaces
+            ? "bg-success"
+            : "bg-warning text-dark"
         }">
-          ${isAvailable ? "Plazas disponibles" : "Actividad llena"}
+          ${
+            isPastActivity
+              ? "Actividad finalizada"
+              : hasAvailablePlaces
+              ? "Plazas disponibles"
+              : "Actividad llena"
+          }
         </span>
       </div>
     `;
@@ -520,7 +540,16 @@ export class ActivityDetailPage {
     if (!actionsElement) return;
 
     const currentUser = this.app.auth.getCurrentUser();
-    const isAvailable =
+
+    // Verificar estado de la actividad
+    const now = new Date();
+    const endDate = new Date(this.activity.end_date);
+    const startDate = new Date(this.activity.start_date);
+
+    const isPastActivity = endDate < now;
+    const isUpcoming = startDate > now;
+
+    const hasAvailablePlaces =
       !this.activity.current_participants ||
       this.activity.current_participants < this.activity.max_participants;
 
@@ -539,7 +568,15 @@ export class ActivityDetailPage {
 
     if (currentUser) {
       if (currentUser.role === "alumno" && this.activity.is_active) {
-        if (isEnrolled) {
+        if (isPastActivity) {
+          // Actividad finalizada
+          actionsHTML += `
+            <div class="alert alert-secondary py-2 px-3 mb-2">
+              <i class="fas fa-flag-checkered me-2"></i>
+              Esta actividad ya ha finalizado
+            </div>
+          `;
+        } else if (isEnrolled) {
           // Si ya está inscrito, mostrar botón de cancelar y badge
           actionsHTML += `
             <div class="alert alert-success py-2 px-3 mb-2">
@@ -551,7 +588,7 @@ export class ActivityDetailPage {
               Cancelar Inscripción
             </button>
           `;
-        } else if (isAvailable) {
+        } else if (hasAvailablePlaces) {
           // Si no está inscrito y hay plazas, mostrar botón de inscripción
           actionsHTML += `
             <button type="button" class="btn btn-success" id="btn-enroll">
@@ -739,7 +776,17 @@ export class ActivityDetailPage {
    * Formatear hora
    */
   formatTime(dateString) {
-    const options = { hour: "2-digit", minute: "2-digit", hour12: false };
-    return new Date(dateString).toLocaleTimeString("es-ES", options);
+    // Extraer hora directamente del string sin conversión de zona horaria
+    const date = dateString.includes("T")
+      ? dateString.split("T")[1]
+      : dateString.split(" ")[1];
+    if (date) {
+      const timePart = date.split(":");
+      if (timePart.length >= 2) {
+        return `${timePart[0]}:${timePart[1]}`;
+      }
+    }
+    // Fallback si no se puede extraer
+    return dateString;
   }
 }

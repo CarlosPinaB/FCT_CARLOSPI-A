@@ -911,14 +911,29 @@ export class ParticipantsPage {
    * Utilidades
    */
   formatDate(dateString) {
-    const options = {
+    // Extraer fecha y hora directamente del string sin conversión de zona horaria
+    const date = new Date(dateString);
+
+    // Formatear solo la fecha
+    const dateOptions = {
       day: "numeric",
       month: "short",
       year: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
     };
-    return new Date(dateString).toLocaleDateString("es-ES", options);
+    const formattedDate = date.toLocaleDateString("es-ES", dateOptions);
+
+    // Extraer hora directamente del string
+    const timePart = dateString.includes("T")
+      ? dateString.split("T")[1]
+      : dateString.split(" ")[1];
+    if (timePart) {
+      const time = timePart.split(":");
+      if (time.length >= 2) {
+        return `${formattedDate}, ${time[0]}:${time[1]}`;
+      }
+    }
+
+    return formattedDate;
   }
 
   showLoading() {

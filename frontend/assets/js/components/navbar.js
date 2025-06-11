@@ -47,7 +47,10 @@ export class NavbarManager {
     // Event listener para colapsar navbar en móviles después de click
     this.navbar.addEventListener("click", (event) => {
       const navLink = event.target.closest(".nav-link");
-      if (navLink) {
+      const isDropdownToggle = event.target.closest("#navbarDropdown");
+
+      // Solo cerrar el navbar si es un nav-link pero NO es el dropdown toggle
+      if (navLink && !isDropdownToggle) {
         const navbarCollapse = this.navbar.querySelector(".navbar-collapse");
         const navbarToggler = this.navbar.querySelector(".navbar-toggler");
 
@@ -55,6 +58,18 @@ export class NavbarManager {
           // Cerrar navbar en móviles
           if (!navbarCollapse.classList.contains("show")) return;
 
+          const bsCollapse = new bootstrap.Collapse(navbarCollapse);
+          bsCollapse.hide();
+        }
+      }
+    });
+
+    // Event listener para elementos del dropdown - cerrar navbar al hacer click en opciones
+    this.navbar.addEventListener("click", (event) => {
+      const dropdownItem = event.target.closest(".dropdown-item");
+      if (dropdownItem) {
+        const navbarCollapse = this.navbar.querySelector(".navbar-collapse");
+        if (navbarCollapse && navbarCollapse.classList.contains("show")) {
           const bsCollapse = new bootstrap.Collapse(navbarCollapse);
           bsCollapse.hide();
         }

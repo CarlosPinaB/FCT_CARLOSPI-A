@@ -124,8 +124,9 @@
 }
 
 .activity-actions .btn-enroll:hover {
-  background: var(--success-dark);
+  background: linear-gradient(135deg, var(--success-dark) 0%, #0f5132 100%);
   border-color: var(--success-dark);
+  color: white;
   transform: translateY(-1px);
 }
 

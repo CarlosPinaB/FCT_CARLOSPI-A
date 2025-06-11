@@ -718,8 +718,18 @@ export class MyEnrollmentsPage {
   }
 
   formatTime(dateString) {
-    const options = { hour: "2-digit", minute: "2-digit", hour12: false };
-    return new Date(dateString).toLocaleTimeString("es-ES", options);
+    // Extraer hora directamente del string sin conversión de zona horaria
+    const date = dateString.includes("T")
+      ? dateString.split("T")[1]
+      : dateString.split(" ")[1];
+    if (date) {
+      const timePart = date.split(":");
+      if (timePart.length >= 2) {
+        return `${timePart[0]}:${timePart[1]}`;
+      }
+    }
+    // Fallback si no se puede extraer
+    return dateString;
   }
 
   truncateText(text, maxLength) {

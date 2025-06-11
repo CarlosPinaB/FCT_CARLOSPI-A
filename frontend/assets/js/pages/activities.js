@@ -17,6 +17,7 @@ export class ActivitiesPage {
     this.loading = false;
     this.filters = {
       category_id: "",
+      status: "active", // 'active', 'all', 'finished'
       sort: "start_date",
     };
     this.currentPage = 1;
@@ -59,15 +60,24 @@ export class ActivitiesPage {
               <div class="card-body">
                 <div class="row g-3 justify-content-center">
                   <!-- Filtro por categoría -->
-                  <div class="col-lg-4 col-md-5">
+                  <div class="col-lg-3 col-md-4">
                     <select class="form-select" id="category-filter">
                       <option value="">Todas las categorías</option>
                       <!-- Las categorías se cargarán dinámicamente -->
                     </select>
                   </div>
                   
+                  <!-- Filtro por estado -->
+                  <div class="col-lg-3 col-md-4">
+                    <select class="form-select" id="status-filter">
+                      <option value="active">Solo activas</option>
+                      <option value="all">Todas</option>
+                      <option value="finished">Solo finalizadas</option>
+                    </select>
+                  </div>
+                  
                   <!-- Ordenamiento -->
-                  <div class="col-lg-4 col-md-5">
+                  <div class="col-lg-4 col-md-3">
                     <select class="form-select" id="sort-filter">
                       <option value="start_date">Próximas a empezar</option>
                       <option value="title">Por título A-Z</option>
@@ -77,7 +87,7 @@ export class ActivitiesPage {
                   </div>
                   
                   <!-- Botón limpiar filtros -->
-                  <div class="col-lg-2 col-md-2">
+                  <div class="col-lg-2 col-md-1">
                     <button type="button" class="btn btn-outline-secondary w-100" id="clear-filters">
                       <i class="fas fa-times"></i>
                     </button>
@@ -226,6 +236,16 @@ export class ActivitiesPage {
       });
     }
 
+    // Filtro por estado
+    const statusFilter = document.getElementById("status-filter");
+    if (statusFilter) {
+      statusFilter.addEventListener("change", (e) => {
+        this.filters.status = e.target.value;
+        this.currentPage = 1;
+        this.filterAndRenderActivities();
+      });
+    }
+
     // Ordenamiento
     const sortFilter = document.getElementById("sort-filter");
     if (sortFilter) {
@@ -294,8 +314,30 @@ export class ActivitiesPage {
       );
     }
 
-    // Solo actividades activas
-    filtered = filtered.filter((activity) => activity.is_active);
+    // Filtro por estado (activas, todas, finalizadas)
+    const now = new Date();
+    filtered = filtered.filter((activity) => {
+      const endDate = new Date(activity.end_date);
+      const isPastActivity = endDate < now;
+
+      switch (this.filters.status) {
+        case "active":
+          // Solo actividades que no han terminado Y están activas
+          return !isPastActivity && activity.is_active;
+
+        case "finished":
+          // Solo actividades que ya terminaron
+          return isPastActivity;
+
+        case "all":
+        default:
+          // Todas las actividades activas O recién finalizadas (últimos 30 días)
+          if (activity.is_active) return true;
+
+          const daysSinceEnd = (now - endDate) / (1000 * 60 * 60 * 24);
+          return daysSinceEnd <= 30; // Mostrar finalizadas de los últimos 30 días
+      }
+    });
 
     return filtered;
   }
@@ -384,7 +426,16 @@ export class ActivitiesPage {
       ? `${activity.current_participants}/${activity.max_participants}`
       : `0/${activity.max_participants}`;
 
-    const isAvailable =
+    // Verificar estado de la actividad
+    const now = new Date();
+    const endDate = new Date(activity.end_date);
+    const startDate = new Date(activity.start_date);
+
+    const isPastActivity = endDate < now;
+    const isUpcoming = startDate > now;
+    const isInProgress = startDate <= now && endDate >= now;
+
+    const hasAvailablePlaces =
       !activity.current_participants ||
       activity.current_participants < activity.max_participants;
 
@@ -394,17 +445,22 @@ export class ActivitiesPage {
     const canEnroll =
       this.app.auth.isAuthenticated() &&
       this.app.auth.getCurrentUser()?.role === "alumno" &&
-      isAvailable &&
-      !isEnrolled;
+      hasAvailablePlaces &&
+      !isEnrolled &&
+      !isPastActivity;
 
     const canUnenroll =
       this.app.auth.isAuthenticated() &&
       this.app.auth.getCurrentUser()?.role === "alumno" &&
-      isEnrolled;
+      isEnrolled &&
+      !isPastActivity;
 
     // Debug: log de los estados calculados
     console.log(`🎯 Actividad ${activity.id} - Estados:`, {
-      isAvailable,
+      isPastActivity,
+      isUpcoming,
+      isInProgress,
+      hasAvailablePlaces,
       isEnrolled,
       canEnroll,
       canUnenroll,
@@ -437,9 +493,19 @@ export class ActivitiesPage {
                   </h4>
                   <div class="activity-status d-flex align-items-center gap-2">
                     <span class="badge ${
-                      isAvailable ? "bg-success" : "bg-warning text-dark"
+                      isPastActivity
+                        ? "bg-secondary"
+                        : hasAvailablePlaces
+                        ? "bg-success"
+                        : "bg-warning text-dark"
                     }">
-                      ${isAvailable ? "Disponible" : "Lleno"}
+                      ${
+                        isPastActivity
+                          ? "Finalizada"
+                          : hasAvailablePlaces
+                          ? "Disponible"
+                          : "Lleno"
+                      }
                     </span>
                   </div>
                 </div>
@@ -534,6 +600,18 @@ export class ActivitiesPage {
                   <div class="fw-semibold">${
                     activity.teacher?.name || "N/A"
                   }</div>
+                  ${
+                    isPastActivity
+                      ? `
+                    <div class="mt-1">
+                      <small class="text-secondary">
+                        <i class="fas fa-flag-checkered me-1"></i>
+                        Actividad finalizada
+                      </small>
+                    </div>
+                  `
+                      : ""
+                  }
                 </div>
               </div>
             </div>
@@ -802,15 +880,18 @@ export class ActivitiesPage {
     // Resetear filtros
     this.filters = {
       category_id: "",
+      status: "active",
       sort: "start_date",
     };
     this.currentPage = 1;
 
     // Limpiar campos del formulario
     const categoryFilter = document.getElementById("category-filter");
+    const statusFilter = document.getElementById("status-filter");
     const sortFilter = document.getElementById("sort-filter");
 
     if (categoryFilter) categoryFilter.value = "";
+    if (statusFilter) statusFilter.value = "active";
     if (sortFilter) sortFilter.value = "start_date";
 
     // Recargar actividades
@@ -874,8 +955,18 @@ export class ActivitiesPage {
   }
 
   formatTime(dateString) {
-    const options = { hour: "2-digit", minute: "2-digit", hour12: false };
-    return new Date(dateString).toLocaleTimeString("es-ES", options);
+    // Extraer hora directamente del string sin conversión de zona horaria
+    const date = dateString.includes("T")
+      ? dateString.split("T")[1]
+      : dateString.split(" ")[1];
+    if (date) {
+      const timePart = date.split(":");
+      if (timePart.length >= 2) {
+        return `${timePart[0]}:${timePart[1]}`;
+      }
+    }
+    // Fallback si no se puede extraer
+    return dateString;
   }
 
   truncateText(text, maxLength) {

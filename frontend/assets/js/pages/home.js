@@ -75,8 +75,8 @@ export class HomePage {
                 <div class="stats-icon bg-primary text-white rounded-circle mx-auto mb-3">
                   <i class="fas fa-calendar-alt"></i>
                 </div>
-                <h3 class="stats-number">50+</h3>
-                <p class="stats-label text-muted">Actividades Disponibles</p>
+                <h4 class="stats-title fw-bold">Actividades Disponibles</h4>
+                <p class="stats-description text-muted small">Descubre más de 50 actividades extracurriculares para complementar tu formación académica</p>
               </div>
             </div>
           </div>
@@ -85,10 +85,10 @@ export class HomePage {
             <div class="stats-card card h-100 text-center">
               <div class="card-body">
                 <div class="stats-icon bg-success text-white rounded-circle mx-auto mb-3">
-                  <i class="fas fa-users"></i>
+                  <i class="fas fa-tags"></i>
                 </div>
-                <h3 class="stats-number">200+</h3>
-                <p class="stats-label text-muted">Estudiantes Activos</p>
+                <h4 class="stats-title fw-bold">Categorías</h4>
+                <p class="stats-description text-muted small">Encuentra actividades organizadas en más de 15 categorías diferentes para todos los gustos</p>
               </div>
             </div>
           </div>
@@ -97,10 +97,10 @@ export class HomePage {
             <div class="stats-card card h-100 text-center">
               <div class="card-body">
                 <div class="stats-icon bg-warning text-white rounded-circle mx-auto mb-3">
-                  <i class="fas fa-chalkboard-teacher"></i>
+                  <i class="fas fa-building"></i>
                 </div>
-                <h3 class="stats-number">25+</h3>
-                <p class="stats-label text-muted">Profesores</p>
+                <h4 class="stats-title fw-bold">Instalaciones</h4>
+                <p class="stats-description text-muted small">Contamos con 50 zonas especializadas para realizar todas las actividades de forma segura</p>
               </div>
             </div>
           </div>
@@ -109,10 +109,10 @@ export class HomePage {
             <div class="stats-card card h-100 text-center">
               <div class="card-body">
                 <div class="stats-icon bg-info text-white rounded-circle mx-auto mb-3">
-                  <i class="fas fa-trophy"></i>
+                  <i class="fas fa-users"></i>
                 </div>
-                <h3 class="stats-number">15+</h3>
-                <p class="stats-label text-muted">Categorías</p>
+                <h4 class="stats-title fw-bold">Estudiantes Activos</h4>
+                <p class="stats-description text-muted small">Más de 200 estudiantes participan activamente en nuestras actividades extracurriculares</p>
               </div>
             </div>
           </div>
@@ -208,34 +208,8 @@ export class HomePage {
   async init() {
     console.log("🏠 HomePage: Página inicializada");
 
-    // Agregar animaciones a las estadísticas
-    this.animateStats();
-
     // Verificar mensajes flash
     this.checkFlashMessages();
-  }
-
-  /**
-   * Animar las estadísticas
-   */
-  animateStats() {
-    const statsNumbers = document.querySelectorAll(".stats-number");
-
-    statsNumbers.forEach((stat) => {
-      const target = parseInt(stat.textContent);
-      let current = 0;
-      const increment = target / 30; // 30 frames de animación
-
-      const timer = setInterval(() => {
-        current += increment;
-        if (current >= target) {
-          current = target;
-          clearInterval(timer);
-        }
-        stat.textContent =
-          Math.floor(current) + (stat.textContent.includes("+") ? "+" : "");
-      }, 50);
-    });
   }
 
   /**
