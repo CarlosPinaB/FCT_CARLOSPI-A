@@ -18,6 +18,7 @@ export class ActivitiesPage {
     this.filters = {
       category_id: "",
       status: "active", // 'active', 'all', 'finished'
+      search: "", // búsqueda por texto
       sort: "start_date",
     };
     this.currentPage = 1;
@@ -58,6 +59,23 @@ export class ActivitiesPage {
           <div class="col-12">
             <div class="card border-0 shadow-sm">
               <div class="card-body">
+                <!-- Barra de búsqueda -->
+                <div class="row mb-3">
+                  <div class="col-12">
+                    <div class="position-relative">
+                      <input 
+                        type="text" 
+                        class="form-control form-control-lg" 
+                        id="search-input"
+                        placeholder="Buscar actividades por nombre o descripción..."
+                        style="padding-left: 45px;">
+                      <i class="fas fa-search position-absolute text-muted" 
+                         style="left: 15px; top: 50%; transform: translateY(-50%);"></i>
+                    </div>
+                  </div>
+                </div>
+                
+                <!-- Filtros adicionales -->
                 <div class="row g-3 justify-content-center">
                   <!-- Filtro por categoría -->
                   <div class="col-lg-3 col-md-4">
@@ -88,7 +106,7 @@ export class ActivitiesPage {
                   
                   <!-- Botón limpiar filtros -->
                   <div class="col-lg-2 col-md-1">
-                    <button type="button" class="btn btn-outline-secondary w-100" id="clear-filters">
+                    <button type="button" class="btn btn-outline-secondary w-100" id="clear-filters" title="Limpiar filtros">
                       <i class="fas fa-times"></i>
                     </button>
                   </div>
@@ -226,6 +244,31 @@ export class ActivitiesPage {
    * Configurar event listeners
    */
   setupEventListeners() {
+    // Campo de búsqueda
+    const searchInput = document.getElementById("search-input");
+    if (searchInput) {
+      // Debounce para evitar demasiadas búsquedas mientras se escribe
+      let searchTimeout;
+      searchInput.addEventListener("input", (e) => {
+        clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(() => {
+          this.filters.search = e.target.value;
+          this.currentPage = 1;
+          this.filterAndRenderActivities();
+        }, 300); // Esperar 300ms después de que el usuario deje de escribir
+      });
+
+      // También buscar al presionar Enter
+      searchInput.addEventListener("keypress", (e) => {
+        if (e.key === "Enter") {
+          clearTimeout(searchTimeout);
+          this.filters.search = e.target.value;
+          this.currentPage = 1;
+          this.filterAndRenderActivities();
+        }
+      });
+    }
+
     // Filtro por categoría
     const categoryFilter = document.getElementById("category-filter");
     if (categoryFilter) {
@@ -306,6 +349,30 @@ export class ActivitiesPage {
    */
   applyFilters(activities) {
     let filtered = [...activities];
+
+    // Filtro por texto de búsqueda
+    if (this.filters.search && this.filters.search.trim()) {
+      const searchTerm = this.filters.search.toLowerCase().trim();
+      filtered = filtered.filter((activity) => {
+        const name = activity.name ? activity.name.toLowerCase() : "";
+        const description = activity.description
+          ? activity.description.toLowerCase()
+          : "";
+        const teacher = activity.teacher?.name
+          ? activity.teacher.name.toLowerCase()
+          : "";
+        const location = activity.location
+          ? activity.location.toLowerCase()
+          : "";
+
+        return (
+          name.includes(searchTerm) ||
+          description.includes(searchTerm) ||
+          teacher.includes(searchTerm) ||
+          location.includes(searchTerm)
+        );
+      });
+    }
 
     // Filtro por categoría
     if (this.filters.category_id) {
@@ -881,15 +948,18 @@ export class ActivitiesPage {
     this.filters = {
       category_id: "",
       status: "active",
+      search: "",
       sort: "start_date",
     };
     this.currentPage = 1;
 
     // Limpiar campos del formulario
+    const searchInput = document.getElementById("search-input");
     const categoryFilter = document.getElementById("category-filter");
     const statusFilter = document.getElementById("status-filter");
     const sortFilter = document.getElementById("sort-filter");
 
+    if (searchInput) searchInput.value = "";
     if (categoryFilter) categoryFilter.value = "";
     if (statusFilter) statusFilter.value = "active";
     if (sortFilter) sortFilter.value = "start_date";
