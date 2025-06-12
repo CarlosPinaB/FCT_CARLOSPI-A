@@ -64,7 +64,7 @@ export class RegisterPage {
                       type="password" 
                       class="form-control"
                       id="password"
-                      placeholder="Mínimo 6 caracteres"
+                      placeholder="Mínimo 8 caracteres"
                       required
                     >
                   </div>
@@ -189,8 +189,8 @@ export class RegisterPage {
         return;
       }
 
-      if (password.length < 6) {
-        AlertManager.error("La contraseña debe tener al menos 6 caracteres");
+      if (password.length < 8) {
+        AlertManager.error("La contraseña debe tener al menos 8 caracteres");
         return;
       }
 

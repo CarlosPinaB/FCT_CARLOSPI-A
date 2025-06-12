@@ -518,9 +518,9 @@ class ProfilePage {
 
       // Actualizar elementos en el DOM directamente
       const headerName = document.querySelector(".card-body h4");
-      const headerEmail = document.querySelector(".card-body .text-muted");
+      //const headerEmail = document.querySelector(".card-body .text-muted");
       if (headerName) headerName.textContent = updatedUser.name;
-      if (headerEmail) headerEmail.textContent = updatedUser.email;
+      //if (headerEmail) headerEmail.textContent = updatedUser.email;
 
       // Desactivar modo edición
       this.cancelProfileEdit();
