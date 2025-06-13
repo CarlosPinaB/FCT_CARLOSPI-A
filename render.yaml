@@ -3,7 +3,7 @@ services:
   - type: web
     name: actividades-backend
     env: docker
-    repo: https://github.com/CarlosPinaB/FCT_CARLOSPI-A.git # Cambiar por tu repo
+    repo: https://github.com/CarlosPinaB/FCT_CARLOSPI-A.git 
     rootDir: backend
     dockerfilePath: ./Dockerfile
     plan: free
@@ -61,7 +61,7 @@ services:
       - key: CORS_ALLOWED_ORIGINS
         value: "https://actividades-frontend.onrender.com,http://localhost:3000"
 
-# Base de datos MySQL
+# Base de datos en PostgreSQL
 databases:
   - name: actividades-db
     databaseName: actividades_db
